@@ -44,7 +44,6 @@ export const AdminPanel = () => {
   const [enabledUsers, setEnabledUsers] = useState<EnabledUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
