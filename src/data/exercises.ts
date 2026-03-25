@@ -1,87 +1,105 @@
-import { Exercise } from './types';
+import { Exercise, MuscleGroup } from './types';
+
+export const muscleGroupLabels: Record<MuscleGroup, string> = {
+  'upper-push': 'Upper Body Push',
+  'upper-pull': 'Upper Body Pull',
+  'lower-body': 'Lower Body',
+  'core': 'Core',
+  'plyometric': 'Plyometric',
+  'cardio': 'Cardio/HIIT',
+};
+
+export const muscleGroupColors: Record<MuscleGroup, string> = {
+  'upper-push': 'text-red-400 bg-red-400/10 border-red-400/20',
+  'upper-pull': 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+  'lower-body': 'text-green-400 bg-green-400/10 border-green-400/20',
+  'core': 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+  'plyometric': 'text-orange-400 bg-orange-400/10 border-orange-400/20',
+  'cardio': 'text-pink-400 bg-pink-400/10 border-pink-400/20',
+};
 
 export const exercises: Exercise[] = [
-  // Station 1: Upper Body Push
-  { id: '1', name: 'Push-ups', station: 'Station 1: Upper Body Push', description: 'Classic push-up on floor', muscleGroups: ['Chest', 'Triceps', 'Shoulders'] },
-  { id: '2', name: 'Diamond Push-ups', station: 'Station 1: Upper Body Push', description: 'Hands close together forming diamond', muscleGroups: ['Triceps', 'Chest'] },
-  { id: '3', name: 'Wide Push-ups', station: 'Station 1: Upper Body Push', description: 'Hands wider than shoulder width', muscleGroups: ['Chest', 'Shoulders'] },
-  { id: '4', name: 'Dumbbell Bench Press', station: 'Station 1: Upper Body Push', description: 'Flat bench with dumbbells', muscleGroups: ['Chest', 'Triceps', 'Shoulders'] },
-  { id: '5', name: 'Incline Dumbbell Press', station: 'Station 1: Upper Body Push', description: '30-45 degree incline', muscleGroups: ['Upper Chest', 'Shoulders', 'Triceps'] },
-  { id: '6', name: 'Overhead Press', station: 'Station 1: Upper Body Push', description: 'Standing barbell or dumbbells', muscleGroups: ['Shoulders', 'Triceps'] },
-  { id: '7', name: 'Pike Push-ups', station: 'Station 1: Upper Body Push', description: 'Hips high, targeting shoulders', muscleGroups: ['Shoulders', 'Triceps'] },
-  { id: '8', name: 'Dips', station: 'Station 1: Upper Body Push', description: 'Parallel bars or bench', muscleGroups: ['Triceps', 'Chest', 'Shoulders'] },
-  { id: '9', name: 'Close Grip Bench Press', station: 'Station 1: Upper Body Push', description: 'Narrow grip on barbell', muscleGroups: ['Triceps', 'Chest'] },
-  { id: '10', name: 'Decline Push-ups', station: 'Station 1: Upper Body Push', description: 'Feet elevated', muscleGroups: ['Upper Chest', 'Shoulders'] },
+  // Upper Push (chest, shoulders, triceps)
+  { id: 'up1', name: 'Push-Ups', muscleGroup: 'upper-push', muscles: ['Chest', 'Shoulders', 'Triceps'], difficulty: 'beginner', reps: 15 },
+  { id: 'up2', name: 'Diamond Push-Ups', muscleGroup: 'upper-push', muscles: ['Chest', 'Triceps'], difficulty: 'intermediate', reps: 12 },
+  { id: 'up3', name: 'Pike Push-Ups', muscleGroup: 'upper-push', muscles: ['Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 10 },
+  { id: 'up4', name: 'Dumbbell Bench Press', muscleGroup: 'upper-push', muscles: ['Chest', 'Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 12 },
+  { id: 'up5', name: 'Overhead Press', muscleGroup: 'upper-push', muscles: ['Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 10 },
+  { id: 'up6', name: 'Dips', muscleGroup: 'upper-push', muscles: ['Chest', 'Triceps', 'Shoulders'], difficulty: 'intermediate', reps: 12 },
+  { id: 'up7', name: 'Decline Push-Ups', muscleGroup: 'upper-push', muscles: ['Upper Chest', 'Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 12 },
+  { id: 'up8', name: 'Close-Grip Bench Press', muscleGroup: 'upper-push', muscles: ['Triceps', 'Chest'], difficulty: 'advanced', reps: 10 },
+  { id: 'up9', name: 'Arnold Press', muscleGroup: 'upper-push', muscles: ['Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 10 },
+  { id: 'up10', name: 'Cable Chest Fly', muscleGroup: 'upper-push', muscles: ['Chest'], difficulty: 'intermediate', reps: 12 },
+  { id: 'up11', name: 'Wall Handstand Push-Ups', muscleGroup: 'upper-push', muscles: ['Shoulders', 'Triceps'], difficulty: 'advanced', reps: 8 },
 
-  // Station 2: Upper Body Pull
-  { id: '11', name: 'Pull-ups', station: 'Station 2: Upper Body Pull', description: 'Bodyweight or weighted', muscleGroups: ['Lats', 'Biceps', 'Rear Delts'] },
-  { id: '12', name: 'Chin-ups', station: 'Station 2: Upper Body Pull', description: 'Supinated grip', muscleGroups: ['Biceps', 'Lats'] },
-  { id: '13', name: 'Lat Pulldown', station: 'Station 2: Upper Body Pull', description: 'Cable machine', muscleGroups: ['Lats', 'Biceps'] },
-  { id: '14', name: 'Bent Over Row', station: 'Station 2: Upper Body Pull', description: 'Barbell or dumbbells', muscleGroups: ['Back', 'Biceps', 'Rear Delts'] },
-  { id: '15', name: 'Seated Cable Row', station: 'Station 2: Upper Body Pull', description: 'Cable machine', muscleGroups: ['Mid Back', 'Biceps'] },
-  { id: '16', name: 'Face Pulls', station: 'Station 2: Upper Body Pull', description: 'Cable at face height', muscleGroups: ['Rear Delts', 'Upper Back'] },
-  { id: '17', name: 'Inverted Rows', station: 'Station 2: Upper Body Pull', description: 'Under bar, body straight', muscleGroups: ['Rhomboids', 'Biceps', 'Lats'] },
-  { id: '18', name: 'Single Arm Row', station: 'Station 2: Upper Body Pull', description: 'One arm at a time', muscleGroups: ['Lats', 'Biceps', 'Core'] },
-  { id: '19', name: 'Straight Arm Pulldown', station: 'Station 2: Upper Body Pull', description: 'Cable, arms straight', muscleGroups: ['Lats'] },
-  { id: '20', name: 'Dead Hang', station: 'Station 2: Upper Body Pull', description: 'Hang from bar', muscleGroups: ['Grip', 'Lats', 'Shoulders'] },
+  // Upper Pull (back, biceps)
+  { id: 'upl1', name: 'Pull-Ups', muscleGroup: 'upper-pull', muscles: ['Lats', 'Biceps', 'Rear Delts'], difficulty: 'intermediate', reps: 8 },
+  { id: 'upl2', name: 'Chin-Ups', muscleGroup: 'upper-pull', muscles: ['Biceps', 'Lats'], difficulty: 'intermediate', reps: 10 },
+  { id: 'upl3', name: 'Bent Over Rows', muscleGroup: 'upper-pull', muscles: ['Back', 'Biceps'], difficulty: 'intermediate', reps: 12 },
+  { id: 'upl4', name: 'Lat Pulldown', muscleGroup: 'upper-pull', muscles: ['Lats', 'Biceps'], difficulty: 'beginner', reps: 12 },
+  { id: 'upl5', name: 'Face Pulls', muscleGroup: 'upper-pull', muscles: ['Rear Delts', 'Upper Back'], difficulty: 'beginner', reps: 15 },
+  { id: 'upl6', name: 'Dumbbell Curls', muscleGroup: 'upper-pull', muscles: ['Biceps'], difficulty: 'beginner', reps: 12 },
+  { id: 'upl7', name: 'Hammer Curls', muscleGroup: 'upper-pull', muscles: ['Biceps', 'Forearms'], difficulty: 'beginner', reps: 12 },
+  { id: 'upl8', name: 'Deadlifts', muscleGroup: 'upper-pull', muscles: ['Back', 'Biceps', 'Glutes'], difficulty: 'intermediate', reps: 10 },
+  { id: 'upl9', name: 'Seated Cable Row', muscleGroup: 'upper-pull', muscles: ['Back', 'Biceps'], difficulty: 'beginner', reps: 12 },
+  { id: 'upl10', name: 'Inverted Rows', muscleGroup: 'upper-pull', muscles: ['Back', 'Biceps'], difficulty: 'intermediate', reps: 12 },
+  { id: 'upl11', name: 'Preacher Curls', muscleGroup: 'upper-pull', muscles: ['Biceps'], difficulty: 'intermediate', reps: 10 },
 
-  // Station 3: Lower Body Squat
-  { id: '21', name: 'Barbell Back Squat', station: 'Station 3: Lower Body Squat', description: 'High bar or low bar', muscleGroups: ['Quads', 'Glutes', 'Core'] },
-  { id: '22', name: 'Front Squat', station: 'Station 3: Lower Body Squat', description: 'Barbell in front rack', muscleGroups: ['Quads', 'Core', 'Upper Back'] },
-  { id: '23', name: 'Goblet Squat', station: 'Station 3: Lower Body Squat', description: 'Dumbbell or kettlebell', muscleGroups: ['Quads', 'Glutes'] },
-  { id: '24', name: 'Bulgarian Split Squat', station: 'Station 3: Lower Body Squat', description: 'Rear foot elevated', muscleGroups: ['Quads', 'Glutes', 'Core'] },
-  { id: '25', name: 'Leg Press', station: 'Station 3: Lower Body Squat', description: 'Machine squat', muscleGroups: ['Quads', 'Glutes'] },
-  { id: '26', name: 'Leg Extension', station: 'Station 3: Lower Body Squat', description: 'Machine isolation', muscleGroups: ['Quads'] },
-  { id: '27', name: 'Hack Squat', station: 'Station 3: Lower Body Squat', description: 'Machine or barbell behind', muscleGroups: ['Quads', 'Glutes'] },
-  { id: '28', name: 'Wall Sit', station: 'Station 3: Lower Body Squat', description: 'Isometric hold', muscleGroups: ['Quads', 'Glutes'] },
-  { id: '29', name: 'Jump Squats', station: 'Station 3: Lower Body Squat', description: 'Explosive', muscleGroups: ['Quads', 'Glutes', 'Calves'] },
-  { id: '30', name: 'Pause Squat', station: 'Station 3: Lower Body Squat', description: '2-3 second pause at bottom', muscleGroups: ['Quads', 'Glutes', 'Core'] },
+  // Lower Body (legs, glutes)
+  { id: 'lb1', name: 'Squats', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes', 'Hamstrings'], difficulty: 'beginner', reps: 15 },
+  { id: 'lb2', name: 'Lunges', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes', 'Hamstrings'], difficulty: 'beginner', reps: 12 },
+  { id: 'lb3', name: 'Romanian Deadlifts', muscleGroup: 'lower-body', muscles: ['Hamstrings', 'Glutes', 'Lower Back'], difficulty: 'intermediate', reps: 12 },
+  { id: 'lb4', name: 'Leg Press', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes'], difficulty: 'beginner', reps: 12 },
+  { id: 'lb5', name: 'Bulgarian Split Squats', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes'], difficulty: 'intermediate', reps: 10 },
+  { id: 'lb6', name: 'Hip Thrusts', muscleGroup: 'lower-body', muscles: ['Glutes', 'Hamstrings'], difficulty: 'intermediate', reps: 15 },
+  { id: 'lb7', name: 'Calf Raises', muscleGroup: 'lower-body', muscles: ['Calves'], difficulty: 'beginner', reps: 20 },
+  { id: 'lb8', name: 'Goblet Squats', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes'], difficulty: 'beginner', reps: 12 },
+  { id: 'lb9', name: 'Step-Ups', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes'], difficulty: 'beginner', reps: 12 },
+  { id: 'lb10', name: 'Wall Sit', muscleGroup: 'lower-body', muscles: ['Quads', 'Glutes'], difficulty: 'beginner', duration: 45 },
+  { id: 'lb11', name: 'Glute Bridges', muscleGroup: 'lower-body', muscles: ['Glutes', 'Hamstrings'], difficulty: 'beginner', reps: 15 },
 
-  // Station 4: Lower Body Hinge
-  { id: '31', name: 'Deadlift', station: 'Station 4: Lower Body Hinge', description: 'Conventional or sumo', muscleGroups: ['Hamstrings', 'Glutes', 'Lower Back'] },
-  { id: '32', name: 'Romanian Deadlift', station: 'Station 4: Lower Body Hinge', description: 'Barbell or dumbbells', muscleGroups: ['Hamstrings', 'Glutes', 'Lower Back'] },
-  { id: '33', name: 'Good Morning', station: 'Station 4: Lower Body Hinge', description: 'Barbell on back', muscleGroups: ['Hamstrings', 'Lower Back', 'Glutes'] },
-  { id: '34', name: 'Hip Thrust', station: 'Station 4: Lower Body Hinge', description: 'Barbell or bodyweight', muscleGroups: ['Glutes', 'Hamstrings'] },
-  { id: '35', name: 'Kettlebell Swing', station: 'Station 4: Lower Body Hinge', description: 'American or Russian style', muscleGroups: ['Glutes', 'Hamstrings', 'Core'] },
-  { id: '36', name: 'Nordic Curl', station: 'Station 4: Lower Body Hinge', description: 'Eccentric hamstring curl', muscleGroups: ['Hamstrings'] },
-  { id: '37', name: 'Single Leg RDL', station: 'Station 4: Lower Body Hinge', description: 'Dumbbell or bodyweight', muscleGroups: ['Hamstrings', 'Glutes', 'Core'] },
-  { id: '38', name: 'Reverse Lunge', station: 'Station 4: Lower Body Hinge', description: 'Step backward', muscleGroups: ['Glutes', 'Hamstrings', 'Quads'] },
-  { id: '39', name: 'Pull Through', station: 'Station 4: Lower Body Hinge', description: 'Cable from between legs', muscleGroups: ['Glutes', 'Hamstrings'] },
-  { id: '40', name: 'Glute Bridge', station: 'Station 4: Lower Body Hinge', description: 'Lying hip extension', muscleGroups: ['Glutes', 'Hamstrings'] },
+  // Core (abs, obliques)
+  { id: 'core1', name: 'Plank', muscleGroup: 'core', muscles: ['Abs', 'Obliques', 'Lower Back'], difficulty: 'beginner', duration: 45 },
+  { id: 'core2', name: 'Crunches', muscleGroup: 'core', muscles: ['Abs'], difficulty: 'beginner', reps: 20 },
+  { id: 'core3', name: 'Bicycle Crunches', muscleGroup: 'core', muscles: ['Abs', 'Obliques'], difficulty: 'beginner', reps: 20 },
+  { id: 'core4', name: 'Leg Raises', muscleGroup: 'core', muscles: ['Lower Abs'], difficulty: 'intermediate', reps: 15 },
+  { id: 'core5', name: 'Russian Twists', muscleGroup: 'core', muscles: ['Obliques', 'Abs'], difficulty: 'beginner', reps: 20 },
+  { id: 'core6', name: 'Mountain Climbers', muscleGroup: 'core', muscles: ['Abs', 'Hip Flexors'], difficulty: 'intermediate', duration: 30 },
+  { id: 'core7', name: 'Dead Bug', muscleGroup: 'core', muscles: ['Abs', 'Lower Back'], difficulty: 'beginner', reps: 12 },
+  { id: 'core8', name: 'Side Plank', muscleGroup: 'core', muscles: ['Obliques', 'Abs'], difficulty: 'intermediate', duration: 30 },
+  { id: 'core9', name: 'Ab Rollout', muscleGroup: 'core', muscles: ['Abs'], difficulty: 'intermediate', reps: 12 },
+  { id: 'core10', name: 'V-Ups', muscleGroup: 'core', muscles: ['Abs', 'Hip Flexors'], difficulty: 'intermediate', reps: 15 },
+  { id: 'core11', name: 'Flutter Kicks', muscleGroup: 'core', muscles: ['Lower Abs'], difficulty: 'intermediate', reps: 20 },
 
-  // Station 5: Core
-  { id: '41', name: 'Plank', station: 'Station 5: Core', description: 'Forearms or hands', muscleGroups: ['Abs', 'Obliques', 'Lower Back'] },
-  { id: '42', name: 'Dead Bug', station: 'Station 5: Core', description: 'Lying opposite arm/leg', muscleGroups: ['Abs', 'Core Stability'] },
-  { id: '43', name: 'Hanging Leg Raise', station: 'Station 5: Core', description: 'Bar or captain chair', muscleGroups: ['Lower Abs', 'Hip Flexors'] },
-  { id: '44', name: 'Ab Wheel Rollout', station: 'Station 5: Core', description: 'Knees or standing', muscleGroups: ['Abs', 'Lats', 'Core'] },
-  { id: '45', name: 'Pallof Press', station: 'Station 5: Core', description: 'Cable or band', muscleGroups: ['Obliques', 'Core'] },
-  { id: '46', name: 'Russian Twist', station: 'Station 5: Core', description: 'Weighted or bodyweight', muscleGroups: ['Obliques', 'Abs'] },
-  { id: '47', name: 'Bicycle Crunch', station: 'Station 5: Core', description: 'Elbow to opposite knee', muscleGroups: ['Obliques', 'Abs'] },
-  { id: '48', name: 'Mountain Climbers', station: 'Station 5: Core', description: 'Plank position, alternating knees', muscleGroups: ['Abs', 'Hip Flexors', 'Shoulders'] },
-  { id: '49', name: 'Side Plank', station: 'Station 5: Core', description: 'Left and right sides', muscleGroups: ['Obliques', 'Core'] },
-  { id: '50', name: 'Hanging Knee Raise', station: 'Station 5: Core', description: 'Easier than leg raise', muscleGroups: ['Lower Abs', 'Hip Flexors'] },
-  { id: '51', name: 'Toes to Bar', station: 'Station 5: Core', description: 'Advanced hanging movement', muscleGroups: ['Abs', 'Grip', 'Lats'] },
-  { id: '52', name: 'V-Ups', station: 'Station 5: Core', description: 'Touch toes in air', muscleGroups: ['Abs', 'Hip Flexors'] },
+  // Plyometric (full body explosive)
+  { id: 'ply1', name: 'Jump Squats', muscleGroup: 'plyometric', muscles: ['Quads', 'Glutes', 'Calves'], difficulty: 'intermediate', reps: 12 },
+  { id: 'ply2', name: 'Burpees', muscleGroup: 'plyometric', muscles: ['Full Body'], difficulty: 'advanced', reps: 10 },
+  { id: 'ply3', name: 'Box Jumps', muscleGroup: 'plyometric', muscles: ['Quads', 'Glutes', 'Calves'], difficulty: 'intermediate', reps: 10 },
+  { id: 'ply4', name: 'Lateral Jumps', muscleGroup: 'plyometric', muscles: ['Glutes', 'Quads', 'Calves'], difficulty: 'intermediate', reps: 12 },
+  { id: 'ply5', name: 'Jump Lunges', muscleGroup: 'plyometric', muscles: ['Quads', 'Glutes'], difficulty: 'intermediate', reps: 10 },
+  { id: 'ply6', name: 'Tuck Jumps', muscleGroup: 'plyometric', muscles: ['Full Body'], difficulty: 'advanced', reps: 8 },
+  { id: 'ply7', name: 'Squat Thrusts', muscleGroup: 'plyometric', muscles: ['Full Body'], difficulty: 'intermediate', reps: 12 },
+  { id: 'ply8', name: 'Skater Jumps', muscleGroup: 'plyometric', muscles: ['Glutes', 'Quads', 'Balance'], difficulty: 'intermediate', reps: 12 },
+  { id: 'ply9', name: 'Clap Push-Ups', muscleGroup: 'plyometric', muscles: ['Chest', 'Shoulders', 'Triceps'], difficulty: 'advanced', reps: 8 },
+  { id: 'ply10', name: 'Plyo Push-Ups', muscleGroup: 'plyometric', muscles: ['Chest', 'Shoulders', 'Triceps'], difficulty: 'intermediate', reps: 10 },
+  { id: 'ply11', name: 'Explosive Mountain Climbers', muscleGroup: 'plyometric', muscles: ['Abs', 'Hip Flexors', 'Cardio'], difficulty: 'advanced', duration: 30 },
 
-  // Station 6: Cardio
-  { id: '53', name: 'Burpees', station: 'Station 6: Cardio', description: 'Full body explosive', muscleGroups: ['Full Body', 'Cardio'] },
-  { id: '54', name: 'Box Jumps', station: 'Station 6: Cardio', description: 'Explosive plyometric', muscleGroups: ['Legs', 'Glutes', 'Cardio'] },
-  { id: '55', name: 'Jump Rope', station: 'Station 6: Cardio', description: 'Double unders or singles', muscleGroups: ['Calves', 'Shoulders', 'Cardio'] },
-  { id: '56', name: 'Battle Ropes', station: 'Station 6: Cardio', description: 'Waves or slams', muscleGroups: ['Shoulders', 'Arms', 'Core', 'Cardio'] },
-  { id: '57', name: 'Rowing Machine', station: 'Station 6: Cardio', description: 'Calorie focused', muscleGroups: ['Back', 'Legs', 'Cardio'] },
-  { id: '58', name: 'Assault Bike', station: 'Station 6: Cardio', description: 'Air bike intervals', muscleGroups: ['Full Body', 'Cardio'] },
-  { id: '59', name: 'Ski Erg', station: 'Station 6: Cardio', description: 'Upper body cardio', muscleGroups: ['Arms', 'Back', 'Core', 'Cardio'] },
-  { id: '60', name: 'Thrusters', station: 'Station 6: Cardio', description: 'Front squat to press', muscleGroups: ['Legs', 'Shoulders', 'Cardio'] },
-  { id: '61', name: 'Running', station: 'Station 6: Cardio', description: 'Treadmill or track', muscleGroups: ['Legs', 'Cardio'] },
-  { id: '62', name: 'Kettlebell Clean & Jerk', station: 'Station 6: Cardio', description: 'Full body explosive', muscleGroups: ['Full Body', 'Cardio'] },
-  { id: '63', name: 'Man Maker', station: 'Station 6: Cardio', description: 'Dumbbell burpee row press', muscleGroups: ['Full Body', 'Cardio'] },
-  { id: '64', name: 'Double Unders', station: 'Station 6: Cardio', description: 'Jump rope skill', muscleGroups: ['Calves', 'Shoulders', 'Cardio'] },
-  { id: '65', name: 'Box Step Overs', station: 'Station 6: Cardio', description: 'No jump, step over', muscleGroups: ['Legs', 'Glutes', 'Cardio'] },
-  { id: '66', name: 'Wall Balls', station: 'Station 6: Cardio', description: 'Squat to throw', muscleGroups: ['Legs', 'Shoulders', 'Core', 'Cardio'] },
+  // Cardio/HIIT
+  { id: 'card1', name: 'Jumping Jacks', muscleGroup: 'cardio', muscles: ['Full Body'], difficulty: 'beginner', duration: 45 },
+  { id: 'card2', name: 'High Knees', muscleGroup: 'cardio', muscles: ['Hip Flexors', 'Quads', 'Cardio'], difficulty: 'beginner', duration: 30 },
+  { id: 'card3', name: 'Butt Kicks', muscleGroup: 'cardio', muscles: ['Hamstrings', 'Cardio'], difficulty: 'beginner', duration: 30 },
+  { id: 'card4', name: 'Sprint in Place', muscleGroup: 'cardio', muscles: ['Full Body', 'Cardio'], difficulty: 'intermediate', duration: 20 },
+  { id: 'card5', name: 'Burpees (Cardio)', muscleGroup: 'cardio', muscles: ['Full Body'], difficulty: 'intermediate', reps: 10 },
+  { id: 'card6', name: 'Mountain Climbers (Fast)', muscleGroup: 'cardio', muscles: ['Abs', 'Cardio'], difficulty: 'intermediate', duration: 30 },
+  { id: 'card7', name: 'Jump Rope', muscleGroup: 'cardio', muscles: ['Calves', 'Cardio'], difficulty: 'intermediate', duration: 45 },
+  { id: 'card8', name: 'Squat Jumps (Cardio)', muscleGroup: 'cardio', muscles: ['Quads', 'Glutes', 'Cardio'], difficulty: 'intermediate', reps: 15 },
+  { id: 'card9', name: 'Shadow Boxing', muscleGroup: 'cardio', muscles: ['Arms', 'Core', 'Cardio'], difficulty: 'intermediate', duration: 45 },
+  { id: 'card10', name: 'Fast Feet', muscleGroup: 'cardio', muscles: ['Legs', 'Cardio'], difficulty: 'beginner', duration: 30 },
+  { id: 'card11', name: 'Plank Jacks', muscleGroup: 'cardio', muscles: ['Abs', 'Cardio'], difficulty: 'intermediate', duration: 30 },
 ];
 
-export const getExercisesByStation = (station: string): Exercise[] => {
-  return exercises.filter(e => e.station === station);
+export const getExercisesByMuscleGroup = (group: MuscleGroup): Exercise[] => {
+  return exercises.filter(e => e.muscleGroup === group);
 };
 
 export const getExerciseById = (id: string): Exercise | undefined => {

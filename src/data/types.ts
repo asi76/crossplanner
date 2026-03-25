@@ -1,16 +1,26 @@
+export type MuscleGroup =
+  | 'upper-push'
+  | 'upper-pull'
+  | 'lower-body'
+  | 'core'
+  | 'plyometric'
+  | 'cardio';
+
 export interface Exercise {
   id: string;
   name: string;
-  station: string;
-  description: string;
-  muscleGroups: string[];
+  muscleGroup: MuscleGroup;
+  muscles: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  reps?: number;
+  duration?: number;
+  description?: string;
 }
 
 export interface WorkoutExercise {
   exerciseId: string;
   sets: number;
   reps: number;
-  duration?: number;
   rest?: number;
 }
 
@@ -38,3 +48,14 @@ export const STATIONS = [
 ] as const;
 
 export type StationName = typeof STATIONS[number];
+
+export const createDefaultWorkout = (): Workout => ({
+  id: crypto.randomUUID(),
+  name: 'My Workout',
+  stations: STATIONS.map((name, index) => ({
+    id: `station-${index}`,
+    name,
+    exercises: []
+  })),
+  createdAt: new Date().toISOString(),
+});
