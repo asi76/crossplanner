@@ -1,7 +1,38 @@
 {
   "build": {
-    "command": "pnpm install && pnpm build",
-    "development": "pnpm dev",
-    "framework": "vite"
+    "command": "npm run build",
+    "development": "npm run dev",
+    "framework": "node"
+  },
+  "routes": {
+    "/": {
+      "path": "dist/index.html",
+      "headers": {
+        "Content-Type": "text/html"
+      }
+    },
+    "/api/*": {
+      "use": "server/index.js"
+    }
+  },
+  "env": {
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google OAuth2 Client ID"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google OAuth2 Client Secret"
+    },
+    "GOOGLE_REFRESH_TOKEN": {
+      "description": "Google OAuth2 Refresh Token"
+    },
+    "GOOGLE_ACCESS_TOKEN": {
+      "description": "Google OAuth2 Access Token (optional, auto-refreshed)"
+    },
+    "DRIVE_FOLDER_ID": {
+      "description": "Google Drive folder ID for storing GIFs"
+    },
+    "NODE_ENV": {
+      "value": "production"
+    }
   }
 }

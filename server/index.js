@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const DIST_DIR = path.join(__dirname, '..', 'dist');
 
 // Middleware
 app.use(cors());
@@ -18,6 +20,15 @@ app.use(express.json());
 
 // Serve static files from public (including local GIFs fallback)
 app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+
+// In production, serve the React app
+if (IS_PRODUCTION) {
+  // Serve static assets from dist/
+  app.use(express.static(DIST_DIR));
+  
+  // Serve GIFs mapping from public
+  app.use('/gif-mapping.json', express.static(path.join(__dirname, '..', 'public', 'gif-mapping.json')));
+}
 
 // Multer setup for file uploads
 const storage = multer.memoryStorage();
@@ -284,7 +295,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// In production, serve React app for all non-API routes
+if (IS_PRODUCTION) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${IS_PRODUCTION ? 'production' : 'development'}`);
+  if (IS_PRODUCTION) {
+    console.log(`Serving React app from: ${DIST_DIR}`);
+  }
   console.log(`Google Drive folder: ${DRIVE_FOLDER_ID}`);
 });
