@@ -196,9 +196,9 @@ export function ExerciseDetailModal({
     setUploadProgress('Eliminazione in corso...');
 
     try {
-      // Extract file ID from Google Drive URL if possible
+      // Extract file ID from Google Drive URL (format: uc?export=view&id=XXX)
       let fileId = null;
-      const match = gifUrl.match(/\/file\/d\/([^/]+)/);
+      const match = gifUrl.match(/[?&]id=([^&]+)/);
       if (match) {
         fileId = match[1];
       }
