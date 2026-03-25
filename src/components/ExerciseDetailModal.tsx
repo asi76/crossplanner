@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search, FolderOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search } from 'lucide-react';
 import { Exercise } from '../data/types';
-import { GOOGLE_CLIENT_ID, DRIVE_FOLDER_ID } from '../data/gdriveConfig';
 
 interface ExerciseDetailModalProps {
   exercise: Exercise;
@@ -13,43 +12,6 @@ interface ExerciseDetailModalProps {
   hasNext?: boolean;
   onGifUpdated?: (exerciseId: string, newUrl: string | null) => void;
 }
-
-// Google APIs loaded state
-let googleapisLoaded = false;
-let gapiLoaded = false;
-let pickerLoaded = false;
-
-// Load Google API scripts
-const loadGoogleApis = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (googleapisLoaded && gapiLoaded && pickerLoaded) {
-      resolve();
-      return;
-    }
-
-    // Load gapi
-    const gapiScript = document.createElement('script');
-    gapiScript.src = 'https://apis.google.com/js/api.js';
-    gapiScript.onload = () => {
-      gapiLoaded = true;
-      // Load picker
-      const pickerScript = document.createElement('script');
-      pickerScript.src = 'https://apis.google.com/js/picker.js';
-      pickerScript.onload = () => {
-        pickerLoaded = true;
-        googleapisLoaded = true;
-        resolve();
-      };
-      pickerScript.onerror = reject;
-      document.body.appendChild(pickerScript);
-    };
-    gapiScript.onerror = reject;
-    document.body.appendChild(gapiScript);
-  });
-};
-
-// OAuth2 token storage
-let currentToken: string | null = null;
 
 export function ExerciseDetailModal({
   exercise,
@@ -66,7 +28,6 @@ export function ExerciseDetailModal({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -187,58 +148,32 @@ export function ExerciseDetailModal({
     }
   }, [exercise.id]);
 
-  // Upload file to Google Drive via Picker
+  // Upload file to local server
   const uploadFile = async (file: File) => {
     setIsUploading(true);
-    setUploadProgress('Preparazione upload...');
+    setUploadProgress('Caricamento in corso...');
 
     try {
-      await loadGoogleApis();
-
-      // Get OAuth token
-      const token = await getOAuthToken();
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      setUploadProgress('Caricamento su Google Drive...');
-
-      // Upload to Google Drive using fetch directly
-      const filename = `${exercise.id}.gif`;
-      const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true`;
-
-      const metadata = {
-        name: filename,
-        parents: [DRIVE_FOLDER_ID],
-        mimeType: 'image/gif',
-      };
-
       const formData = new FormData();
-      formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      formData.append('file', file);
+      formData.append('gif', file);
+      formData.append('exerciseId', exercise.id);
 
-      const response = await fetch(uploadUrl, {
+      const response = await fetch('/api/upload-gif', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formData,
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'Upload failed');
+        throw new Error(error.error || 'Upload failed');
       }
 
       const result = await response.json();
       
-      // Construct direct URL
-      const directUrl = `https://drive.google.com/uc?export=view&id=${result.id}`;
-      
       setUploadProgress('Caricamento completato!');
       
       if (onGifUpdated) {
-        onGifUpdated(exercise.id, directUrl);
+        onGifUpdated(exercise.id, result.url);
       }
 
       setTimeout(() => {
@@ -255,82 +190,6 @@ export function ExerciseDetailModal({
     }
   };
 
-  // Get OAuth token using Google's identity services (no popup needed)
-  const getOAuthToken = (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/drive.file',
-        callback: (response: any) => {
-          if (response.access_token) {
-            currentToken = response.access_token;
-            resolve(response.access_token);
-          } else {
-            resolve(null);
-          }
-        },
-        error_callback: (error: any) => {
-          console.error('OAuth error:', error);
-          resolve(null);
-        }
-      });
-      client.requestAccessToken();
-    });
-  };
-
-  // Open Google Drive Picker
-  const openDrivePicker = async () => {
-    setIsPickerOpen(true);
-    try {
-      await loadGoogleApis();
-
-      const token = await getOAuthToken();
-      if (!token) {
-        setIsPickerOpen(false);
-        return;
-      }
-
-      if (typeof google === 'undefined' || !google.picker) {
-        console.error('Google Picker not loaded');
-        setIsPickerOpen(false);
-        return;
-      }
-
-      const picker = new google.picker.PickerBuilder()
-        .addView(google.picker.ViewId.DOCS)
-        .addView(new google.picker.DocsUploadView()
-          .setParent(DRIVE_FOLDER_ID)
-          .setIncludeFolders(true))
-        .setOAuthToken(token)
-        .setDeveloperKey('AIzaSyD-RZL4Ckhl3V6bKR_GnDXD0P-9K-qZGMU')
-        .setCallback((data: any) => {
-          setIsPickerOpen(false);
-          if (data.action === google.picker.Action.PICKED) {
-            const file = data.docs[0];
-            const fileId = file.id;
-            const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            
-            if (onGifUpdated) {
-              onGifUpdated(exercise.id, directUrl);
-            }
-          }
-        })
-        .build();
-      
-      picker.setVisible(true);
-    } catch (error) {
-      console.error('Picker error:', error);
-      setIsPickerOpen(false);
-    }
-  };
-
-  // Open Google Images search for this exercise
-  const searchGif = () => {
-    const query = encodeURIComponent(`${exercise.name} exercise gif`);
-    const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
-    window.open(searchUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-  };
-
   const handleDeleteGif = async () => {
     if (!gifUrl) return;
 
@@ -338,32 +197,14 @@ export function ExerciseDetailModal({
     setUploadProgress('Eliminazione in corso...');
 
     try {
-      // Extract file ID from Google Drive URL
-      let fileId = null;
-      const match = gifUrl.match(/[?&]id=([^&]+)/);
-      if (match) {
-        fileId = match[1];
-      }
-
-      if (!fileId) {
-        throw new Error('File ID not found');
-      }
-
-      const token = await getOAuthToken();
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?supportsAllDrives=true`, {
+      const response = await fetch('/api/delete-gif', {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exerciseId: exercise.id }),
       });
 
-      if (!response.ok && response.status !== 204) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Delete failed');
+      if (!response.ok) {
+        throw new Error('Delete failed');
       }
 
       if (onGifUpdated) {
@@ -383,6 +224,13 @@ export function ExerciseDetailModal({
         setIsDeleting(false);
       }, 3000);
     }
+  };
+
+  // Open Google Images search for this exercise
+  const searchGif = () => {
+    const query = encodeURIComponent(`${exercise.name} exercise gif`);
+    const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
+    window.open(searchUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
   };
 
   const openFilePicker = () => {
@@ -461,20 +309,6 @@ export function ExerciseDetailModal({
               >
                 <Search className="w-4 h-4" />
                 Cerca GIF su Google Immagini
-              </button>
-
-              {/* Open Drive Picker Button */}
-              <button
-                onClick={openDrivePicker}
-                disabled={isPickerOpen}
-                className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                {isPickerOpen ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FolderOpen className="w-4 h-4" />
-                )}
-                Apri Google Drive
               </button>
 
               {/* Drag & Drop Zone */}
