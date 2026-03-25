@@ -65,6 +65,8 @@ async function githubRequest(method, apiPath, body = null) {
 
 // Upload GIF — commits to GitHub
 app.post('/api/upload-gif', async (req, res) => {
+  console.log('POST /api/upload-gif called');
+  
   try {
     const { exerciseId, gifData } = req.body;
     
@@ -97,6 +99,7 @@ app.post('/api/upload-gif', async (req, res) => {
     // Return GitHub raw URL
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GIT_BRANCH}/${repoPath}`;
     
+    console.log('Upload success:', filename);
     res.json({ success: true, url: rawUrl, filename });
   } catch (error) {
     console.error('Upload error:', error.message);
@@ -146,6 +149,11 @@ app.get('/api/health', (req, res) => {
 
 // Serve React app for all non-API routes in production
 if (IS_PRODUCTION) {
+  // Explicit 404 for unknown API routes (helps debug)
+  app.get('/api/:route(*)', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  });
+  
   app.get('*', (req, res) => {
     res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
