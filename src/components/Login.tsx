@@ -14,11 +14,7 @@ export const Login = ({ onRetry }: LoginProps) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      if (showRequestModal) {
-        await signIn(requestMessage);
-      } else {
-        await signIn();
-      }
+      await signIn();
     } catch (error) {
       console.error('Sign in failed:', error);
     }
@@ -78,7 +74,7 @@ export const Login = ({ onRetry }: LoginProps) => {
           ) : null}
 
           <button
-            onClick={handleRequestAccess}
+            onClick={handleGoogleSignIn}
             disabled={loading}
             className="w-full bg-white text-gray-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
