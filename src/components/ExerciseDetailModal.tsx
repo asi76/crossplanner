@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search } from 'lucide-react';
 import { Exercise } from '../data/types';
 
+// imgbb API - free image hosting
+const IMGBB_API_KEY = '4c4f70c4ef12e84240e0df69e4c2d20e'; // Free tier key
+
+async function uploadToImgbb(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+    method: 'POST',
+    body: formData
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    return { url: data.data.url };
+  } else {
+    throw new Error(data.error?.message || 'Upload failed');
+  }
+}
+
 interface ExerciseDetailModalProps {
   exercise: Exercise;
   gifUrl: string | null;
@@ -148,33 +169,18 @@ export function ExerciseDetailModal({
     }
   }, [exercise.id]);
 
-  // Upload file to server (which uploads to Cloudinary)
+  // Upload file directly to imgbb (no server needed)
   const uploadFile = async (file: File) => {
     setIsUploading(true);
     setUploadProgress('Caricamento in corso...');
 
     try {
-      const base64 = await fileToBase64(file);
-      
-      const response = await fetch('/api/upload-gif', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exerciseId: exercise.id,
-          gifData: base64
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
-      }
+      const result = await uploadToImgbb(file);
       
       setUploadProgress('Caricamento completato!');
       
       if (onGifUpdated) {
-        onGifUpdated(exercise.id, data.url);
+        onGifUpdated(exercise.id, result.url);
       }
 
       setTimeout(() => {
@@ -191,52 +197,24 @@ export function ExerciseDetailModal({
     }
   };
 
-  // Convert File to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleDeleteGif = async () => {
     if (!gifUrl) return;
 
     setIsDeleting(true);
-    setUploadProgress('Eliminazione in corso...');
+    setUploadProgress('Eliminazione non supportata su imgbb');
 
-    try {
-      const response = await fetch('/api/delete-gif', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicId: `gifs/${exercise.id}` }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Delete failed');
-      }
-
+    // imgbb free tier doesn't support deletion via API
+    // The GIF stays in imgbb but we remove it from display
+    setTimeout(() => {
       if (onGifUpdated) {
         onGifUpdated(exercise.id, null);
       }
-
-      setUploadProgress('GIF eliminata!');
+      setUploadProgress('GIF rimossa dalla lista');
       setTimeout(() => {
         setUploadProgress(null);
         setIsDeleting(false);
       }, 1500);
-    } catch (error: any) {
-      console.error('Delete error:', error);
-      setUploadProgress(`Errore: ${error.message}`);
-      setTimeout(() => {
-        setUploadProgress(null);
-        setIsDeleting(false);
-      }, 3000);
-    }
+    }, 500);
   };
 
   // Open Google Images search for this exercise
