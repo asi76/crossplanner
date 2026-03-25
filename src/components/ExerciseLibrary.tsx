@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Exercise } from '../data/types';
+import { gifMapping } from '../data/gifMapping';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 const muscleGroups: MuscleGroup[] = ['upper-push', 'upper-pull', 'lower-body', 'core', 'plyometric', 'cardio'];
@@ -9,7 +10,7 @@ const muscleGroups: MuscleGroup[] = ['upper-push', 'upper-pull', 'lower-body', '
 export function ExerciseLibrary() {
   const [expandedGroup, setExpandedGroup] = useState<MuscleGroup | null>('upper-push');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [gifMapping, setGifMapping] = useState<Record<string, string>>({});
+  const [localGifMapping, setLocalGifMapping] = useState<Record<string, string>>({});
 
   // Get all exercises in order for navigation
   const allExercises = exercises;
@@ -38,17 +39,9 @@ export function ExerciseLibrary() {
     setSelectedExercise(exercise);
   };
 
-  // Load GIF mapping from file on mount
-  useEffect(() => {
-    fetch('/gif-mapping.json')
-      .then(res => res.ok ? res.json() : {})
-      .catch(() => ({}))
-      .then(data => setGifMapping(data));
-  }, []);
-
   // Update GIF mapping when a GIF is uploaded/deleted
   const handleGifUpdated = (exerciseId: string, newUrl: string | null) => {
-    setGifMapping(prev => {
+    setLocalGifMapping(prev => {
       const updated = { ...prev };
       if (newUrl) {
         updated[exerciseId] = newUrl;
@@ -60,6 +53,11 @@ export function ExerciseLibrary() {
   };
 
   const getGifUrl = (exerciseId: string): string | null => {
+    // Check local mapping first (for newly uploaded GIFs)
+    if (localGifMapping[exerciseId]) {
+      return localGifMapping[exerciseId];
+    }
+    // Fall back to static mapping
     if (gifMapping[exerciseId]) {
       return gifMapping[exerciseId];
     }
