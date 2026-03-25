@@ -1,26 +1,18 @@
 {
   "build": {
-    "command": "npm install && npm run build",
+    "command": "npm ci",
     "development": "npm run dev",
     "framework": "node"
   },
-  "start": {
-    "command": "node server/index.js",
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "routes": {
-    "/": {
-      "use": "server/index.js"
-    }
-  },
   "env": {
+    "NODE_ENV": "production",
     "GITHUB_TOKEN": {
-      "description": "GitHub Personal Access Token"
+      "description": "GitHub Personal Access Token",
+      "required": false
     },
     "GITHUB_REPO": {
-      "description": "GitHub repository (default: asi76/crosstraining)"
+      "description": "GitHub repository (default: asi76/crosstraining)",
+      "required": false
     }
   }
 }

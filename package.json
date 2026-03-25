@@ -8,9 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "start": "NODE_ENV=production node server/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
-    "deploy": "npm run build && npm start"
+    "start": "node server/index.js",
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
     "cors": "^2.8.6",
