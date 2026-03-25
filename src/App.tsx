@@ -8,7 +8,6 @@ import {
   LogOut, 
   Shield,
   Play,
-  Clock,
   ChevronLeft
 } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
@@ -74,33 +73,7 @@ function App() {
 
   if (role === 'pending') {
     return (
-      <div className="min-h-screen bg-dark-bg flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-md text-center"
-        >
-          <div className="bg-yellow-500/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-10 h-10 text-yellow-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Access Pending</h1>
-          <p className="text-gray-400 mb-6">
-            Your account is not yet enabled. The administrator will review your request.
-          </p>
-          <button
-            onClick={() => window.location.href = 'mailto:asi.vong@gmail.com?subject=Crosstraining App Access Request'}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors mb-4"
-          >
-            Contact Administrator
-          </button>
-          <button
-            onClick={signOut}
-            className="w-full bg-dark-hover text-gray-400 py-3 rounded-lg font-medium hover:bg-dark-border transition-colors"
-          >
-            Sign Out
-          </button>
-        </motion.div>
-      </div>
+      <Login isPendingUser pendingEmail={user?.email || undefined} />
     );
   }
 

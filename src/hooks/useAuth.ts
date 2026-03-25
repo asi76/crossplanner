@@ -7,8 +7,10 @@ import {
   getUserRole, 
   createPendingUser,
   ADMIN_EMAIL,
-  auth 
+  auth,
+  db 
 } from '../firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export type UserRole = 'admin' | 'enabled' | 'pending' | null;
 
@@ -16,7 +18,7 @@ interface UseAuthReturn {
   user: User | null;
   role: UserRole;
   loading: boolean;
-  signIn: (requestMessage?: string) => Promise<void>;
+  signIn: (requestEmail?: string, requestMessage?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
 }
@@ -65,8 +67,23 @@ export const useAuth = (): UseAuthReturn => {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async (requestMessage?: string) => {
+  const signIn = async (requestEmail?: string, requestMessage?: string) => {
     try {
+      // If email and message provided (Request Access flow), save pending request to Firestore BEFORE auth
+      if (requestEmail && requestMessage) {
+        try {
+          const userRef = doc(db, 'users', requestEmail);
+          await setDoc(userRef, {
+            role: 'pending',
+            requestedAt: serverTimestamp(),
+            email: requestEmail,
+            message: requestMessage,
+          }, { merge: true });
+        } catch (e) {
+          console.error('Error saving pending request:', e);
+        }
+      }
+      
       const firebaseUser = await signInWithGoogle();
       setUser(firebaseUser);
       
@@ -82,7 +99,7 @@ export const useAuth = (): UseAuthReturn => {
       if (userRole === 'enabled' || userRole === 'admin') {
         setRole(userRole);
       } else {
-        // New user - create pending request with message
+        // New user - create pending request (message was already saved above if provided)
         try {
           await createPendingUser(firebaseUser, requestMessage);
         } catch (e) {

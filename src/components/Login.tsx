@@ -4,12 +4,14 @@ import { Dumbbell, Loader2, X, Send, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface LoginProps {
-  onRetry?: () => void;
+  isPendingUser?: boolean;
+  pendingEmail?: string;
 }
 
-export const Login = ({ onRetry }: LoginProps) => {
+export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
   const { signIn, loading } = useAuth();
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestEmail, setRequestEmail] = useState('');
   const [requestMessage, setRequestMessage] = useState('');
 
   const handleGoogleSignIn = async () => {
@@ -25,16 +27,26 @@ export const Login = ({ onRetry }: LoginProps) => {
   };
 
   const handleSubmitRequest = async () => {
-    if (requestMessage.trim()) {
-      await handleGoogleSignIn();
+    if (requestEmail.trim() && requestMessage.trim()) {
+      // Save pending request to Firestore BEFORE auth
+      await signIn(requestEmail, requestMessage);
       setShowRequestModal(false);
+      setRequestEmail('');
       setRequestMessage('');
     }
   };
 
   const handleCloseModal = () => {
     setShowRequestModal(false);
+    setRequestEmail('');
     setRequestMessage('');
+  };
+
+  const handleContactAdmin = () => {
+    if (pendingEmail) {
+      setRequestEmail(pendingEmail);
+    }
+    setShowRequestModal(true);
   };
 
   return (
@@ -58,7 +70,7 @@ export const Login = ({ onRetry }: LoginProps) => {
             <p className="text-gray-400 text-center">Sign in to access your workouts</p>
           </div>
 
-          {onRetry ? (
+          {isPendingUser ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -68,8 +80,15 @@ export const Login = ({ onRetry }: LoginProps) => {
                 Your account is not yet enabled.
               </p>
               <p className="text-gray-400 text-center text-sm mt-2">
-                Request access by sending a message to the administrator.
+                Contact the administrator to request access.
               </p>
+              <button
+                onClick={handleContactAdmin}
+                className="w-full mt-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-yellow-500/30 transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Contact Administrator
+              </button>
             </motion.div>
           ) : null}
 
@@ -139,6 +158,17 @@ export const Login = ({ onRetry }: LoginProps) => {
                 Write a message to the administrator explaining why you should have access to the Crosstraining app.
               </p>
 
+              <div className="mb-4">
+                <label className="block text-gray-400 text-sm mb-2">Your Google Email</label>
+                <input
+                  type="email"
+                  value={requestEmail}
+                  onChange={(e) => setRequestEmail(e.target.value)}
+                  placeholder="your.email@gmail.com"
+                  className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
               <textarea
                 value={requestMessage}
                 onChange={(e) => setRequestMessage(e.target.value)}
@@ -155,7 +185,7 @@ export const Login = ({ onRetry }: LoginProps) => {
                 </button>
                 <button
                   onClick={handleSubmitRequest}
-                  disabled={!requestMessage.trim() || loading}
+                  disabled={!requestEmail.trim() || !requestMessage.trim() || loading}
                   className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
