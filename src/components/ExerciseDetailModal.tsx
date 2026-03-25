@@ -148,64 +148,33 @@ export function ExerciseDetailModal({
     }
   }, [exercise.id]);
 
-  // Upload directly to GitHub from browser
+  // Upload file to server (which uploads to Cloudinary)
   const uploadFile = async (file: File) => {
     setIsUploading(true);
     setUploadProgress('Caricamento in corso...');
 
     try {
-      // GitHub repo info
-      const repo = 'asi76/crosstraining';
-      const branch = 'main';
-      const path = `public/gifs/${exercise.id}.gif`;
-      const githubApi = `https://api.github.com/repos/${repo}/contents/${path}`;
-      
-      // Convert to base64
       const base64 = await fileToBase64(file);
-      const content = base64.replace(/^data:image\/gif;base64,/, '');
-
-      // Get current file SHA if exists (needed for update)
-      let sha = null;
-      try {
-        const getRes = await fetch(`${githubApi}?ref=${branch}`, {
-          headers: { 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (getRes.ok) {
-          const data = await getRes.json();
-          sha = data.sha;
-        }
-      } catch (e) {
-        // File doesn't exist, that's fine
-      }
-
-      // Upload to GitHub
-      const body = {
-        message: `chore: update GIF ${exercise.id}`,
-        content,
-        branch,
-        ...(sha && { sha })
-      };
-
-      const response = await fetch(githubApi, {
-        method: 'PUT',
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body)
+      
+      const response = await fetch('/api/upload-gif', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exerciseId: exercise.id,
+          gifData: base64
+        }),
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || `Upload failed: ${response.status}`);
-      }
+      const data = await response.json();
 
-      const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
       
       setUploadProgress('Caricamento completato!');
       
       if (onGifUpdated) {
-        onGifUpdated(exercise.id, rawUrl);
+        onGifUpdated(exercise.id, data.url);
       }
 
       setTimeout(() => {
@@ -239,40 +208,16 @@ export function ExerciseDetailModal({
     setUploadProgress('Eliminazione in corso...');
 
     try {
-      const repo = 'asi76/crosstraining';
-      const branch = 'main';
-      const path = `public/gifs/${exercise.id}.gif`;
-      const githubApi = `https://api.github.com/repos/${repo}/contents/${path}`;
-
-      // Get SHA first
-      const getRes = await fetch(`${githubApi}?ref=${branch}`, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' }
-      });
-
-      if (!getRes.ok) {
-        throw new Error('File not found');
-      }
-
-      const fileData = await getRes.json();
-      const sha = fileData.sha;
-
-      // Delete via GitHub API
-      const response = await fetch(githubApi, {
+      const response = await fetch('/api/delete-gif', {
         method: 'DELETE',
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `chore: delete GIF ${exercise.id}`,
-          branch,
-          sha
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicId: `gifs/${exercise.id}` }),
       });
 
-      if (!response.ok && response.status !== 204) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Delete failed');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Delete failed');
       }
 
       if (onGifUpdated) {
