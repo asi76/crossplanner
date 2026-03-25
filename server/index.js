@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
@@ -12,217 +11,115 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const DIST_DIR = path.join(__dirname, '..', 'dist');
-const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const GIFS_DIR = path.join(PUBLIC_DIR, 'gifs');
-const MAPPING_FILE = path.join(PUBLIC_DIR, 'gif-mapping.json');
 
 // GitHub config
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'asi76/crosstraining';
 const GIT_BRANCH = 'main';
-
-// Ensure directories exist
-if (!fs.existsSync(GIFS_DIR)) {
-  fs.mkdirSync(GIFS_DIR, { recursive: true });
-}
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Serve static files
-app.use('/public', express.static(PUBLIC_DIR));
-
-// Serve GIFs directly
-app.use('/gifs', express.static(GIFS_DIR));
+const GIFS_REPO_PATH = 'public/gifs';
 
 // Serve React app in production
 if (IS_PRODUCTION) {
   app.use(express.static(DIST_DIR));
 }
 
-// Load GIF mapping
-const loadMapping = () => {
-  try {
-    if (fs.existsSync(MAPPING_FILE)) {
-      return JSON.parse(fs.readFileSync(MAPPING_FILE, 'utf-8'));
-    }
-  } catch (e) {
-    console.error('Error loading mapping:', e);
-  }
-  return {};
-};
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
 
-// Save GIF mapping
-const saveMapping = (mapping) => {
-  fs.writeFileSync(MAPPING_FILE, JSON.stringify(mapping, null, 2));
-};
-
-// Commit file to GitHub via API
-const commitToGitHub = async (filePath, repoPath) => {
+// GitHub API helper
+async function githubCommit(path, contentBase64, message) {
   if (!GITHUB_TOKEN) {
-    console.log('GitHub token not configured, skipping git commit');
-    return;
+    throw new Error('GitHub token not configured');
   }
 
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
+  
+  let sha = null;
   try {
-    const fileContent = fs.readFileSync(filePath);
-    const contentBase64 = fileContent.toString('base64');
-
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${repoPath}`;
-    
-    // Check if file exists first (to get SHA)
-    let sha = null;
-    const getResponse = await fetch(url, {
+    const getRes = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${GITHUB_TOKEN}`,
         'Accept': 'application/vnd.github.v3+json'
       }
     });
-    
-    if (getResponse.ok) {
-      const data = await getResponse.json();
+    if (getRes.ok) {
+      const data = await getRes.json();
       sha = data.sha;
     }
-
-    // Create or update file
-    const body = {
-      message: `chore: add GIF ${path.basename(filePath)}`,
-      content: contentBase64,
-      branch: GIT_BRANCH,
-      ...(sha && { sha })
-    };
-
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (response.ok) {
-      console.log(`Committed to GitHub: ${repoPath}`);
-    } else {
-      const error = await response.json();
-      console.error('GitHub commit failed:', error);
-    }
-  } catch (error) {
-    console.error('Error committing to GitHub:', error);
+  } catch (e) {
+    // File doesn't exist yet, that's fine
   }
-};
 
-// Multer config — save to public/gifs/
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, GIFS_DIR);
-  },
-  filename: (req, file, cb) => {
-    const exerciseId = req.body.exerciseId || req.params.exerciseId;
-    cb(null, `${exerciseId}.gif`);
+  const body = {
+    message,
+    content: contentBase64,
+    branch: GIT_BRANCH,
+    ...(sha && { sha })
+  };
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'GitHub commit failed');
   }
-});
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'image/gif') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only GIF files allowed'));
-    }
-  }
-});
+  return response.json();
+}
 
-// Upload GIF
-app.post('/api/upload-gif', upload.single('gif'), async (req, res) => {
+// Upload GIF — commits directly to GitHub
+app.post('/api/upload-gif', async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+    const { exerciseId, gifData } = req.body;
+    
+    if (!exerciseId || !gifData) {
+      return res.status(400).json({ error: 'exerciseId and gifData required' });
     }
 
-    const { exerciseId } = req.body;
-    if (!exerciseId) {
-      return res.status(400).json({ error: 'Exercise ID required' });
+    if (!gifData.startsWith('data:image/gif;base64,')) {
+      return res.status(400).json({ error: 'Invalid GIF format' });
     }
 
-    // Save with exercise ID as filename
     const filename = `${exerciseId}.gif`;
-    const destPath = path.join(GIFS_DIR, filename);
+    const base64Data = gifData.replace(/^data:image\/gif;base64,/, '');
+    const repoPath = `${GIFS_REPO_PATH}/${filename}`;
+
+    console.log(`Uploading ${filename} to GitHub...`);
     
-    // Delete existing file if different
-    if (fs.existsSync(destPath)) {
-      fs.unlinkSync(destPath);
-    }
+    await githubCommit(
+      repoPath,
+      base64Data,
+      `chore: add GIF ${filename}`
+    );
+
+    // Return GitHub raw URL
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GIT_BRANCH}/${repoPath}`;
     
-    // Copy to final location
-    fs.copyFileSync(req.file.path, destPath);
-    fs.unlinkSync(req.file.path);
-
-    // Generate URL
-    const gifUrl = `/gifs/${filename}`;
-
-    // Update mapping
-    const mapping = loadMapping();
-    mapping[exerciseId] = gifUrl;
-    saveMapping(mapping);
-
-    // Commit to GitHub
-    await commitToGitHub(destPath, `public/gifs/${filename}`);
-
-    console.log(`Uploaded: ${filename} -> ${gifUrl}`);
-    res.json({ success: true, url: gifUrl, filename });
+    console.log(`Uploaded: ${filename} -> ${rawUrl}`);
+    res.json({ success: true, url: rawUrl, filename });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: 'Upload failed', details: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Delete GIF
+// Delete GIF — not implemented since we'd need to delete from git history
 app.delete('/api/delete-gif', async (req, res) => {
-  try {
-    const { exerciseId } = req.body;
-    if (!exerciseId) {
-      return res.status(400).json({ error: 'Exercise ID required' });
-    }
-
-    const filename = `${exerciseId}.gif`;
-    const filePath = path.join(GIFS_DIR, filename);
-
-    // Delete local file
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // Update mapping
-    const mapping = loadMapping();
-    if (mapping[exerciseId]) {
-      delete mapping[exerciseId];
-      saveMapping(mapping);
-    }
-
-    // Note: Deleting from GitHub would require additional API call
-    // For now, we just delete locally and the file stays in git history
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Delete error:', error);
-    res.status(500).json({ error: 'Delete failed', details: error.message });
-  }
-});
-
-// Get mapping
-app.get('/api/gif-mapping', (req, res) => {
-  const mapping = loadMapping();
-  res.json(mapping);
+  res.status(501).json({ error: 'Delete not implemented — GIFs persist in git history' });
 });
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', github: !!GITHUB_TOKEN });
 });
 
 // Serve React app for all non-API routes in production
@@ -233,8 +130,5 @@ if (IS_PRODUCTION) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`GIFs directory: ${GIFS_DIR}`);
-  console.log(`Mode: ${IS_PRODUCTION ? 'production' : 'development'}`);
-  console.log(`GitHub sync: ${GITHUB_TOKEN ? 'enabled' : 'disabled (set GITHUB_TOKEN env var)'}`);
+  console.log(`Server on port ${PORT} | GitHub sync: ${!!GITHUB_TOKEN}`);
 });

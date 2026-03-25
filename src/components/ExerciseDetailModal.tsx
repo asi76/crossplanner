@@ -148,19 +148,22 @@ export function ExerciseDetailModal({
     }
   }, [exercise.id]);
 
-  // Upload file to local server
+  // Upload file — converts to base64 and sends to server which commits to GitHub
   const uploadFile = async (file: File) => {
     setIsUploading(true);
     setUploadProgress('Caricamento in corso...');
 
     try {
-      const formData = new FormData();
-      formData.append('gif', file);
-      formData.append('exerciseId', exercise.id);
-
+      // Convert to base64
+      const base64 = await fileToBase64(file);
+      
       const response = await fetch('/api/upload-gif', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exerciseId: exercise.id,
+          gifData: base64
+        }),
       });
 
       if (!response.ok) {
@@ -188,6 +191,16 @@ export function ExerciseDetailModal({
         setIsUploading(false);
       }, 3000);
     }
+  };
+
+  // Convert File to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleDeleteGif = async () => {
