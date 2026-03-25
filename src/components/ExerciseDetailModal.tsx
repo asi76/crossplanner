@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search } from 'lucide-react';
 import { Exercise } from '../data/types';
+import { storage } from '../firebase/auth';
 
 interface ExerciseDetailModalProps {
   exercise: Exercise;
@@ -153,28 +154,38 @@ export function ExerciseDetailModal({
     setUploadProgress('Caricamento in corso...');
 
     try {
-      const formData = new FormData();
-      formData.append('gif', file);
-      formData.append('exerciseId', exercise.id);
-
-      // Use API URL from environment or fallback to relative URL
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const uploadUrl = apiUrl ? `${apiUrl}/api/upload-gif` : '/api/upload-gif';
-
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
+      // Upload directly to Firebase Storage
+      const filename = `${exercise.id}.gif`;
+      const storageRef = ref(storage, `gifs/${filename}`);
+      
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      
+      // Wait for upload to complete
+      await new Promise<void>((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(`Caricamento... ${Math.round(progress)}%`);
+          },
+          (error) => {
+            console.error('Upload error:', error);
+            reject(error);
+          },
+          async () => {
+            // Upload completed successfully
+            resolve();
+          }
+        );
       });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
+      // Get download URL
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      
       setUploadProgress('Caricamento completato!');
       
       if (onGifUpdated) {
-        onGifUpdated(exercise.id, result.url);
+        onGifUpdated(exercise.id, downloadURL);
       }
 
       setTimeout(() => {
@@ -196,24 +207,15 @@ export function ExerciseDetailModal({
     setUploadProgress('Eliminazione in corso...');
 
     try {
-      // Extract file ID from Google Drive URL (format: uc?export=view&id=XXX)
-      let fileId = null;
-      const match = gifUrl.match(/[?&]id=([^&]+)/);
-      if (match) {
-        fileId = match[1];
-      }
-
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const deleteUrl = apiUrl ? `${apiUrl}/api/delete-gif` : '/api/delete-gif';
-
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exerciseId: exercise.id, fileId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Delete failed');
+      // Extract the path from Firebase Storage URL
+      // URL format: https://firebasestorage.googleapis.com/.../gifs/filename.gif?alt=media&token=...
+      const urlObj = new URL(gifUrl);
+      const pathMatch = urlObj.pathname.match(/\/o\/(.+)\?/);
+      const fullPath = pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+      
+      if (fullPath) {
+        const desertRef = ref(storage, fullPath);
+        await deleteObject(desertRef);
       }
 
       if (onGifUpdated) {

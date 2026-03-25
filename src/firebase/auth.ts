@@ -20,11 +20,19 @@ import {
   serverTimestamp,
   updateDoc
 } from 'firebase/firestore';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
 import { firebaseConfig } from './config';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 export const ADMIN_EMAIL = 'asi.vong@gmail.com';

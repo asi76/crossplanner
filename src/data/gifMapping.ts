@@ -1,86 +1,95 @@
-// Auto-generated GIF mapping for exercises
-// Source: Google Drive — folder: apps/crosstraining/gif
-// Generated from drive_file_ids.json
+// GIF mapping for exercises
+// Stored in Firebase Storage: gs://studio-7990555522-7e3ef.firebasestorage.app/gifs/
+
+const BUCKET = 'studio-7990555522-7e3ef.firebasestorage.app';
+
+/**
+ * Get the Firebase Storage URL for an exercise GIF.
+ * Format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/gifs/{id}.gif?alt=media
+ */
+function getFirebaseGifUrl(exerciseId: string): string {
+  const encodedPath = encodeURIComponent(`gifs/${exerciseId}.gif`);
+  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${encodedPath}?alt=media`;
+}
 
 export const gifMapping: Record<string, string> = {
+  // Cardio/HIIT
+  "card1": getFirebaseGifUrl("card1"),
+  "card2": getFirebaseGifUrl("card2"),
+  "card3": getFirebaseGifUrl("card3"),
+  "card4": getFirebaseGifUrl("card4"),
+  "card5": getFirebaseGifUrl("card5"),
+  "card6": getFirebaseGifUrl("card6"),
+  "card7": getFirebaseGifUrl("card7"),
+  "card8": getFirebaseGifUrl("card8"),
+  "card9": getFirebaseGifUrl("card9"),
+  "card10": getFirebaseGifUrl("card10"),
+  "card11": getFirebaseGifUrl("card11"),
 
-// Cardio/HIIT
-  "card1": "https://drive.google.com/uc?export=view&id=1MWXZmgTmiP8_c3LeMeG_1MYYTf7EYjod",
-  "card2": "https://drive.google.com/uc?export=view&id=1moe7OlfRC2QlwoSO9gAawcU4tqeyHFMr",
-  "card3": "https://drive.google.com/uc?export=view&id=1_h0dl0PkXHtw4DDqS5d95JzkxPRxCZas",
-  "card4": "https://drive.google.com/uc?export=view&id=119VgRbbTGnMjHJsxIvHAzfeOpPT8py99",
-  "card5": "https://drive.google.com/uc?export=view&id=1CvlhSfgCilizNiH-DKr17qdWCOnDVNsC",
-  "card6": "https://drive.google.com/uc?export=view&id=1ZfLlOR5DOk1ZLI5ihwLcXXyngDCw5pIv",
-  "card7": "https://drive.google.com/uc?export=view&id=16gsA5HMYkRHaltEMtfj31zjniHL4kg7q",
-  "card8": "https://drive.google.com/uc?export=view&id=1nJxQWeaQgALGRLzSjaAfiHfgXRdYqrEy",
-  "card9": "https://drive.google.com/uc?export=view&id=1T8he4l29efqfot7jNCy8o5e6LSgrEHmL",
-  "card10": "https://drive.google.com/uc?export=view&id=1-eakg_w21ZO7qoBbu1IxfKgea7Sb238n",
-  "card11": "https://drive.google.com/uc?export=view&id=1CQe80O7mZ4F5oqCRfEFualC3h6h8bCax",
+  // Core
+  "core1": getFirebaseGifUrl("core1"),
+  "core2": getFirebaseGifUrl("core2"),
+  "core3": getFirebaseGifUrl("core3"),
+  "core4": getFirebaseGifUrl("core4"),
+  "core5": getFirebaseGifUrl("core5"),
+  "core6": getFirebaseGifUrl("core6"),
+  "core7": getFirebaseGifUrl("core7"),
+  "core8": getFirebaseGifUrl("core8"),
+  "core9": getFirebaseGifUrl("core9"),
+  "core10": getFirebaseGifUrl("core10"),
+  "core11": getFirebaseGifUrl("core11"),
 
-// Core
-  "core1": "https://drive.google.com/uc?export=view&id=1YZNWv1nUyLZ67X2Se4HAeZctsLEmPl0N",
-  "core2": "https://drive.google.com/uc?export=view&id=1FiyxhYGGqNxr4TcfKFWEIWnAuFeCodL3",
-  "core3": "https://drive.google.com/uc?export=view&id=1muzfn3RpqTebpChpQkwgeHh7Wsn-5vXV",
-  "core4": "https://drive.google.com/uc?export=view&id=1acNGO_cC-6Yh2pZcpXhgeS257rA986Q0",
-  "core5": "https://drive.google.com/uc?export=view&id=1NrpV3BJTueGcJbMGqwhKxz5CMzFasx-e",
-  "core6": "https://drive.google.com/uc?export=view&id=1LYX6K3EPXViUTf5FiIRHJba-RKYjfFhN",
-  "core7": "https://drive.google.com/uc?export=view&id=1h9ZVW7Mg1rV5IGd5qy8UQ49oVAFojMiW",
-  "core8": "https://drive.google.com/uc?export=view&id=1kVIJI2KuMSol0KfVCkhLAj9T04jdy0jQ",
-  "core9": "https://drive.google.com/uc?export=view&id=1AehrS_mcFSnkHo0l4tAB7oA61hHojxz5",
-  "core10": "https://drive.google.com/uc?export=view&id=1-kBqCK5olDdhjUqZyOGTB44_Fj4Esz6m",
-  "core11": "https://drive.google.com/uc?export=view&id=1Za7eA7udMLfULXudgaelklWOw0a-mupg",
+  // Lower Body
+  "lb1": getFirebaseGifUrl("lb1"),
+  "lb2": getFirebaseGifUrl("lb2"),
+  "lb3": getFirebaseGifUrl("lb3"),
+  "lb4": getFirebaseGifUrl("lb4"),
+  "lb5": getFirebaseGifUrl("lb5"),
+  "lb6": getFirebaseGifUrl("lb6"),
+  "lb7": getFirebaseGifUrl("lb7"),
+  "lb8": getFirebaseGifUrl("lb8"),
+  "lb9": getFirebaseGifUrl("lb9"),
+  "lb10": getFirebaseGifUrl("lb10"),
+  "lb11": getFirebaseGifUrl("lb11"),
 
-// Lower Body
-  "lb1": "https://drive.google.com/uc?export=view&id=127DYfrNutvIfwpp3RZ1MVdlvZDY9DSrp",
-  "lb2": "https://drive.google.com/uc?export=view&id=1bTLzXkaknhxbTFNtj_JC1-vkys6dIi0L",
-  "lb3": "https://drive.google.com/uc?export=view&id=1P7IzVKww_2lhSzIhjWdvpU1wRHuSkLJ_",
-  "lb4": "https://drive.google.com/uc?export=view&id=1RCBwEsqajhYvXZo69x1XbhGXST-Jzt6b",
-  "lb5": "https://drive.google.com/uc?export=view&id=1XEee9GP4JYAt1xycdzDdRwyrroFGPKIM",
-  "lb6": "https://drive.google.com/uc?export=view&id=1Ph7OyBRM5tFg66HyWOCDYxI6Se7LBvF8",
-  "lb7": "https://drive.google.com/uc?export=view&id=1BJxC-IQatLmEjR-AKT8gZpq2lfP0CRUR",
-  "lb8": "https://drive.google.com/uc?export=view&id=19mK6LrvicKu2o-rTtbdc-Unes2NlYTwF",
-  "lb9": "https://drive.google.com/uc?export=view&id=18DdUU1zTuv7MwGJUjoizXvGq_QBAh4jv",
-  "lb10": "https://drive.google.com/uc?export=view&id=10rdSNexJfexjPN_UbUCLPhB5Tylozh2m",
-  "lb11": "https://drive.google.com/uc?export=view&id=1ZeKVVehQdh3ZyHVvEsj4E6nemS07kaDq",
+  // Plyometric
+  "ply1": getFirebaseGifUrl("ply1"),
+  "ply2": getFirebaseGifUrl("ply2"),
+  "ply3": getFirebaseGifUrl("ply3"),
+  "ply4": getFirebaseGifUrl("ply4"),
+  "ply5": getFirebaseGifUrl("ply5"),
+  "ply6": getFirebaseGifUrl("ply6"),
+  "ply7": getFirebaseGifUrl("ply7"),
+  "ply8": getFirebaseGifUrl("ply8"),
+  "ply9": getFirebaseGifUrl("ply9"),
+  "ply10": getFirebaseGifUrl("ply10"),
+  "ply11": getFirebaseGifUrl("ply11"),
 
-// Plyometric
-  "ply1": "https://drive.google.com/uc?export=view&id=16s5lKWfEy_7qZxZDtvYN9T7jEcV8zH9z",
-  "ply2": "https://drive.google.com/uc?export=view&id=13eauUrIf2XKzUSf49z0KwrRFjJ-alVCK",
-  "ply3": "https://drive.google.com/uc?export=view&id=1ufI9cgY813Le9nkQSMhTUnjDOSsQSE23",
-  "ply4": "https://drive.google.com/uc?export=view&id=1G2UQd93S2cU9Ip3_nsS3nwhpkqQi1VAR",
-  "ply5": "https://drive.google.com/uc?export=view&id=1IXxxU-2LFyjw-uv7DcRJ8Z_gTLZ5ogkv",
-  "ply6": "https://drive.google.com/uc?export=view&id=14UUaLlaDTbcPkE1n7QKgffmg6dUySyRh",
-  "ply7": "https://drive.google.com/uc?export=view&id=1hJe_c2iJtVJO6ZUwi6X8p9sxDG-Y8Cld",
-  "ply8": "https://drive.google.com/uc?export=view&id=1v9jpy2y-b_U-pj7kzwvN8tUjap-eM5Zj",
-  "ply9": "https://drive.google.com/uc?export=view&id=1EM2h-8Z8xcA2-2aIe4EWySX9cCLcT0zH",
-  "ply10": "https://drive.google.com/uc?export=view&id=1UyflEBwltY4abPWokDSFrTP9FaVS73KH",
-  "ply11": "https://drive.google.com/uc?export=view&id=1oXWMOUpVfUEGIyJ52-UEF2vaaIE4FLbR",
+  // Upper Push
+  "up1": getFirebaseGifUrl("up1"),
+  "up2": getFirebaseGifUrl("up2"),
+  "up3": getFirebaseGifUrl("up3"),
+  "up4": getFirebaseGifUrl("up4"),
+  "up5": getFirebaseGifUrl("up5"),
+  "up6": getFirebaseGifUrl("up6"),
+  "up7": getFirebaseGifUrl("up7"),
+  "up8": getFirebaseGifUrl("up8"),
+  "up9": getFirebaseGifUrl("up9"),
+  "up10": getFirebaseGifUrl("up10"),
+  "up11": getFirebaseGifUrl("up11"),
 
-// Upper Push
-  "up1": "https://drive.google.com/uc?export=view&id=1IkE66613r1zJz99ogWCVF5Zuthqm_yo5",
-  "up2": "https://drive.google.com/uc?export=view&id=1lTKu141ssPCosfkTEMT8xxSQ8YYsD4D1",
-  "up3": "https://drive.google.com/uc?export=view&id=1zZccjOMaTUmGtSjCpVCLU-iFVUDYaq68",
-  "up4": "https://drive.google.com/uc?export=view&id=1Fb-V1E40-5rPZV-iKAbS7FnTLbA14Ssp",
-  "up5": "https://drive.google.com/uc?export=view&id=1frRXvRsReOitfwsi1ubwYRhvKxk7fcyU",
-  "up6": "https://drive.google.com/uc?export=view&id=1xOijUYvxIAdNFwjzE_kC1Zj5VxO7_6kw",
-  "up7": "https://drive.google.com/uc?export=view&id=1L4i1ZA8rFLiPlf35TEMpbdDZS0u2sxWU",
-  "up8": "https://drive.google.com/uc?export=view&id=18e6D2zUlRtNkWG70S6swi2qKE9NfF5Dr",
-  "up9": "https://drive.google.com/uc?export=view&id=1idOdqvxMgdZ-ewdeSKdLZGZ8xBmwOzPc",
-  "up10": "https://drive.google.com/uc?export=view&id=11A6tSXOTVfnHwBT_bCzuB2ANTKLmGZcG",
-  "up11": "https://drive.google.com/uc?export=view&id=1UBnIorSIZ9LkSSirG7qzEVnN3NnZqyfS",
-
-// Upper Pull
-  "upl1": "https://drive.google.com/uc?export=view&id=1Hi-Q4nm9I8gtTOr4-ZdzAySgPAIrbDjS",
-  "upl2": "https://drive.google.com/uc?export=view&id=1hQMgmwdmRzv9jrIAxIqztmijWBsXuYtc",
-  "upl3": "https://drive.google.com/uc?export=view&id=1Zjx7LgwgRSi8llHN-MG8BPFakJTz1Mld",
-  "upl4": "https://drive.google.com/uc?export=view&id=1pKwjaAoYA3Ero030nPk6QOpf7VdXjxcW",
-  "upl5": "https://drive.google.com/uc?export=view&id=1QxPRIHt7CDc6Dw-KZLW5KjNXOEo4XAuW",
-  "upl6": "https://drive.google.com/uc?export=view&id=1TgQ_b9jls_C6RNxLUMLrLI3sDdVB9Avz",
-  "upl7": "https://drive.google.com/uc?export=view&id=1_Ev7QFwQCEhp-90Bo_JzCr-YMBnH46Lj",
-  "upl8": "https://drive.google.com/uc?export=view&id=1VZq4aQZgiJGZ4S1lw2nUu7ucTWBqG1bC",
-  "upl9": "https://drive.google.com/uc?export=view&id=1AmJ8h8tAcERk5gFjKOXei7phBJR5FHKB",
-  "upl10": "https://drive.google.com/uc?export=view&id=1ItrvK4m26qj1acRrglXMlQ8GIjQrzdNQ",
-  "upl11": "https://drive.google.com/uc?export=view&id=1iUcBZ-mS2M88VgYi13Ejn4iRHpD3k97W",
+  // Upper Pull
+  "upl1": getFirebaseGifUrl("upl1"),
+  "upl2": getFirebaseGifUrl("upl2"),
+  "upl3": getFirebaseGifUrl("upl3"),
+  "upl4": getFirebaseGifUrl("upl4"),
+  "upl5": getFirebaseGifUrl("upl5"),
+  "upl6": getFirebaseGifUrl("upl6"),
+  "upl7": getFirebaseGifUrl("upl7"),
+  "upl8": getFirebaseGifUrl("upl8"),
+  "upl9": getFirebaseGifUrl("upl9"),
+  "upl10": getFirebaseGifUrl("upl10"),
+  "upl11": getFirebaseGifUrl("upl11"),
 };
 
 /**
