@@ -352,7 +352,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
             {/* Expanded Content */}
             {expandedGroups.has(group.id) && (
-              <div className="border-t border-zinc-800 h-auto">
+              <div className="border-t border-zinc-800 max-h-96 overflow-y-auto">
                 {getExercisesByGroup(group.id).length === 0 ? (
                   <div className="px-5 py-8 text-center text-zinc-500">
                     Nessun esercizio in questo gruppo
