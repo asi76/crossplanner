@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Dumbbell, Clock, Play, Trash2, LogOut } from 'lucide-react';
+import { Dumbbell, Play, Trash2, LogOut, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/auth';
 import { Workout } from '../data/types';
 import { supabase } from '../supabase';
+import { getGifUrl } from '../data/gifMapping';
 
 interface SavedWorkoutsProps {
   onLoadWorkout: (workout: Workout) => void;
 }
 
+const WORKOUT_CATEGORIES = [
+  { id: 'forza', name: 'Forza' },
+  { id: 'cardio1', name: 'Cardio 1' },
+  { id: 'cardio2', name: 'Cardio 2' }
+];
+
 export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
+  const [viewingExercise, setViewingExercise] = useState<any>(null);
+  const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
 
   useEffect(() => {
     loadWorkouts();
@@ -33,7 +43,7 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
       }
       
       if (data) {
-        const loadedWorkouts: Workout[] = data.map(w => ({
+        const loadedWorkouts: Workout[] = data.map((w: any) => ({
           id: w.id,
           name: w.name,
           stations: w.stations || [],
@@ -47,10 +57,6 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
     
     setLoading(false);
   }
-
-  const getTotalExercises = (workout: Workout) => {
-    return workout.stations.reduce((sum, station) => sum + station.exercises.length, 0);
-  };
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('it-IT', {
@@ -73,6 +79,17 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
 
   const handleLogout = async () => {
     await signOut(auth);
+  };
+
+  const handleViewExercise = async (exercise: any) => {
+    setViewingExercise(exercise);
+    const gifUrl = await getGifUrl(exercise.exerciseId);
+    setViewingExerciseGif(gifUrl);
+  };
+
+  const getExercisesByCategory = (workout: Workout, categoryId: string) => {
+    const category = workout.stations.find((s: any) => s.id === categoryId);
+    return category?.exercises || [];
   };
 
   if (loading) {
@@ -103,53 +120,153 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
           <p className="text-sm mt-2">Crea il tuo primo workout!</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {workouts.map(workout => (
-            <div
-              key={workout.id}
-              className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold text-lg mb-2">{workout.name}</h3>
-                  <div className="flex items-center gap-4 text-zinc-400 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Dumbbell className="w-4 h-4" />
-                      {getTotalExercises(workout)} exercises
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {workout.stations.length} stations
-                    </span>
-                    <span>{formatDate(workout.createdAt)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {workout.stations.filter(s => s.exercises.length > 0).map(station => (
-                      <span key={station.id} className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-400">
-                        {station.name.replace('Station ', '')} ({station.exercises.length})
-                      </span>
-                    ))}
+            <div key={workout.id} className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+              {/* Workout Header */}
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                onClick={() => setExpandedWorkout(expandedWorkout === workout.id ? null : workout.id)}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  {expandedWorkout === workout.id ? (
+                    <ChevronUp className="w-5 h-5 text-zinc-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-zinc-400" />
+                  )}
+                  <div>
+                    <h3 className="text-white font-semibold">{workout.name}</h3>
+                    <span className="text-zinc-500 text-sm">{formatDate(workout.createdAt)}</span>
                   </div>
                 </div>
-                
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onLoadWorkout(workout)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onLoadWorkout(workout);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                   >
                     <Play className="w-4 h-4" />
                     Avvia
                   </button>
                   <button
-                    onClick={() => handleDelete(workout.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(workout.id);
+                    }}
                     className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+
+              {/* Expanded Content - Category Tabs and Exercises */}
+              {expandedWorkout === workout.id && (
+                <div className="border-t border-zinc-800">
+                  {/* Category Tabs */}
+                  <div className="flex gap-2 p-4 border-b border-zinc-800">
+                    {WORKOUT_CATEGORIES.map((cat) => {
+                      const exercises = getExercisesByCategory(workout, cat.id);
+                      return (
+                        <div key={cat.id} className="flex-1">
+                          <div className="text-center mb-2">
+                            <span className={`px-3 py-1 rounded text-sm font-medium ${
+                              exercises.length > 0 
+                                ? 'bg-blue-500/20 text-blue-400' 
+                                : 'bg-zinc-800 text-zinc-500'
+                            }`}>
+                              {cat.name} ({exercises.length})
+                            </span>
+                          </div>
+                          {/* Exercise List */}
+                          <div className="space-y-2">
+                            {exercises.map((ex: any, idx: number) => (
+                              <div key={idx} className="bg-zinc-800/50 rounded-lg p-2">
+                                <button
+                                  onClick={() => handleViewExercise(ex)}
+                                  className="w-full text-left"
+                                >
+                                  <span className="text-white text-sm font-medium hover:text-blue-400 transition-colors">
+                                    {ex.exerciseName || ex.exerciseId}
+                                  </span>
+                                  <div className="text-zinc-500 text-xs mt-0.5">
+                                    {ex.sets} x {ex.reps}
+                                  </div>
+                                </button>
+                              </div>
+                            ))}
+                            {exercises.length === 0 && (
+                              <div className="text-zinc-600 text-xs text-center py-2">
+                                Nessun esercizio
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* View-Only Exercise Modal */}
+      {viewingExercise && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setViewingExercise(null)}>
+          <div 
+            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <Dumbbell className="w-5 h-5 text-blue-500" />
+                <h2 className="text-xl font-bold text-white">{viewingExercise.exerciseName || viewingExercise.exerciseId}</h2>
+              </div>
+              <button
+                onClick={() => setViewingExercise(null)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col md:flex-row max-h-[calc(80vh-70px)]">
+              {/* Left - GIF */}
+              <div className="md:w-1/2 bg-zinc-950 flex items-center justify-center p-4 min-h-[200px]">
+                {viewingExerciseGif ? (
+                  <img 
+                    src={viewingExerciseGif} 
+                    alt={viewingExercise.exerciseName} 
+                    className="max-w-full max-h-full object-contain rounded-lg"
+                  />
+                ) : (
+                  <div className="text-zinc-500 text-center">
+                    <Dumbbell className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nessuna immagine</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right - Sets/Reps Info */}
+              <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Serie e Ripetizioni</h3>
+                    <p className="text-white text-sm">
+                      {viewingExercise.sets} x {viewingExercise.reps}
+                      {viewingExercise.rest && ` - ${viewingExercise.rest}s pausa`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
