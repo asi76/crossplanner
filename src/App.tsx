@@ -42,6 +42,7 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('forza');
   const [viewingExercise, setViewingExercise] = useState<any>(null);
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
   const [allExercises, setAllExercises] = useState<any[]>([]);
@@ -263,7 +264,7 @@ function App() {
                     : 'border-dark-border hover:border-blue-500/50'
                 }`}
               >
-                {/* Workout Header - Always Visible */}
+                {/* Workout Header - clickable to expand */}
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer"
                   onClick={() => setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id)}
@@ -286,25 +287,6 @@ function App() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-                    >
-                      {expandedWorkoutId === workout.id ? (
-                        <>
-                          <X className="w-4 h-4" />
-                          Chiudi
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-4 h-4" />
-                          Mostra
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
                         setEditingWorkout(workout);
                         setCurrentView('create');
                       }}
@@ -313,6 +295,18 @@ function App() {
                     >
                       <Pencil className="w-5 h-5 text-blue-400" />
                     </button>
+                    {expandedWorkoutId === workout.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedWorkoutId(null);
+                        }}
+                        className="p-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
+                        title="Chiudi"
+                      >
+                        <X className="w-5 h-5 text-gray-300" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -326,63 +320,51 @@ function App() {
                       transition={{ duration: 0.3 }}
                       className="border-t border-dark-border"
                     >
-                      {/* Category Tabs */}
-                      <div className="p-4">
+                      {/* Category Tabs - same style as CreateWorkout */}
+                      <div className="flex gap-2 p-4 border-b border-dark-border">
                         {WORKOUT_CATEGORIES.map((cat) => {
                           const exercises = getExercisesByCategory(workout, cat.id);
-                          if (exercises.length === 0) return null;
+                          const isSelected = selectedCategoryId === cat.id;
                           return (
-                            <div key={cat.id} className="mb-4 last:mb-0">
-                              <div className="text-center mb-2">
-                                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-                                  exercises.length > 0 
-                                    ? 'bg-blue-500/20 text-blue-400' 
+                            <button
+                              key={cat.id}
+                              onClick={() => setSelectedCategoryId(cat.id)}
+                              className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white'
+                                  : exercises.length > 0
+                                    ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
                                     : 'bg-dark-bg text-gray-500'
-                                }`}>
-                                  {cat.name} ({exercises.length})
-                                </span>
-                              </div>
-                              {/* Exercise List - full width, showing muscles/tipo/difficulty */}
-                              <div className="space-y-2">
-                                {exercises.map((ex: any, index: number) => {
-                                  const exerciseData = getExerciseById(ex.exerciseId);
-                                  return (
-                                    <div 
-                                      key={index}
-                                      onClick={() => setViewingExercise(ex)}
-                                      className="bg-dark-bg rounded-lg p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors w-full"
-                                    >
-                                      <div className="flex items-center justify-between w-full">
-                                        <div className="flex items-center gap-3">
-                                          <Dumbbell className="w-4 h-4 text-blue-400" />
-                                          <span className="text-white text-sm font-medium">
-                                            {ex.exerciseName || ex.exerciseId}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          {exerciseData?.muscles?.slice(0, 2).map((m: string, i: number) => (
-                                            <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
-                                          ))}
-                                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                            exerciseData?.tipo === 'aerobico' 
-                                              ? 'bg-blue-500/20 text-blue-400' 
-                                              : 'bg-orange-500/20 text-orange-400'
-                                          }`}>
-                                            {exerciseData?.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                                          </span>
-                                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                            exerciseData?.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                                            exerciseData?.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                                            'bg-red-500/20 text-red-400'
-                                          }`}>
-                                            {exerciseData?.difficulty === 'beginner' ? 'Principiante' :
-                                             exerciseData?.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                              }`}
+                            >
+                              {cat.name} ({exercises.length})
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Exercise List for selected category */}
+                      <div className="p-4">
+                        {getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
+                          const exerciseData = getExerciseById(ex.exerciseId);
+                          return (
+                            <div 
+                              key={index}
+                              onClick={() => setViewingExercise(ex)}
+                              className="bg-dark-bg rounded-lg p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors w-full mb-2 last:mb-0"
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3">
+                                  <Dumbbell className="w-4 h-4 text-blue-400" />
+                                  <span className="text-white text-sm font-medium">
+                                    {ex.exerciseName || ex.exerciseId}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
+                                    <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           );

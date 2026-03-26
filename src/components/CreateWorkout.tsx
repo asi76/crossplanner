@@ -89,8 +89,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
     });
   };
 
-  // Add exercise to current category
-  const handleAddExercise = (exercise: Exercise) => {
+  // Add exercise to current category and collapse the group it belongs to
+  const handleAddExercise = (exercise: Exercise, groupId: string) => {
     const newExercise = {
       exerciseId: exercise.id,
       sets: exercise.reps ? 3 : 4,
@@ -105,6 +105,13 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       newCategories[catIndex].exercises.push(newExercise);
       setWorkoutCategories(newCategories);
     }
+
+    // Collapse the group after adding
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.delete(groupId);
+      return next;
+    });
   };
 
   const handleRemoveExercise = (categoryId: string, exerciseIndex: number) => {
@@ -267,9 +274,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                 )}
               </button>
 
-              {/* Exercises List - shown when expanded */}
+              {/* Exercises List - shown when expanded, same style as ExerciseLibrary */}
               {expandedGroups.has(group.id) && (
-                <div className="border-t border-zinc-800">
+                <div className="border-t border-zinc-800 max-h-96 overflow-y-auto scrollbar-dark">
                   {getExercisesByGroup(group.id).length === 0 ? (
                     <div className="px-5 py-8 text-center text-zinc-500">
                       Nessun esercizio
@@ -278,36 +285,43 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     getExercisesByGroup(group.id).map(exercise => (
                       <div
                         key={exercise.id}
-                        className="px-5 py-3 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
+                        className="px-5 py-4 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <button
-                              onClick={() => handleViewExercise(exercise)}
-                              className="text-left w-full"
-                            >
-                              <span className="text-white font-medium">{exercise.name}</span>
-                              <div className="flex items-center gap-1 mt-1">
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  exercise.tipo === 'aerobico' 
-                                    ? 'bg-blue-500/20 text-blue-400' 
-                                    : 'bg-orange-500/20 text-orange-400'
-                                }`}>
-                                  {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                                </span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                                  exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-red-500/20 text-red-400'
-                                }`}>
-                                  {exercise.difficulty === 'beginner' ? 'Principiante' :
-                                   exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                                </span>
+                            <div className="flex items-center justify-between">
+                              <button
+                                onClick={() => handleViewExercise(exercise)}
+                                className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left"
+                              >
+                                {exercise.name}
+                              </button>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                                exercise.tipo === 'aerobico' 
+                                  ? 'bg-blue-500/20 text-blue-400' 
+                                  : 'bg-orange-500/20 text-orange-400'
+                              }`}>
+                                {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                              <div className="flex flex-wrap gap-x-2">
+                                {exercise.muscles.map((muscle, idx) => (
+                                  <span key={idx} className="text-xs text-zinc-500">{muscle}</span>
+                                ))}
                               </div>
-                            </button>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                                exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                                exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-red-500/20 text-red-400'
+                              }`}>
+                                {exercise.difficulty === 'beginner' ? 'Principiante' :
+                                 exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                              </span>
+                            </div>
                           </div>
                           <button
-                            onClick={() => handleAddExercise(exercise)}
+                            onClick={() => handleAddExercise(exercise, group.id)}
                             className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors ml-2"
                             title="Aggiungi"
                           >
