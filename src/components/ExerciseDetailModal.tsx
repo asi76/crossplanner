@@ -158,18 +158,25 @@ export function ExerciseDetailModal({
     try {
       const filename = `${exercise.id}.gif`;
       
+      // First delete any existing file
+      await supabase.storage.from('gifs').remove([filename]);
+      
+      // Small delay to ensure delete completes
+      await new Promise(r => setTimeout(r, 100));
+      
+      // Then upload new file
       const { data, error } = await supabase.storage
         .from('gifs')
         .upload(filename, file, {
-          cacheControl: '3600',
-          upsert: true
+          cacheControl: '0',
+          upsert: false
         });
 
       if (error) {
         throw new Error(error.message);
       }
 
-      // Get public URL with cache busting
+      // Get public URL
       const { data: urlData } = supabase.storage
         .from('gifs')
         .getPublicUrl(filename);
@@ -180,15 +187,11 @@ export function ExerciseDetailModal({
       setUploadProgress('Caricamento completato!');
       
       // Save to database
-      await setGifUrl(exercise.id, urlData.publicUrl);
+      await setGifUrl(exercise.id, cachedUrl);
       
       // Notify parent with cache-busted URL
       if (onGifUpdated) {
         onGifUpdated(exercise.id, cachedUrl);
-      }
-      
-      if (onGifUpdated) {
-        onGifUpdated(exercise.id, urlData.publicUrl);
       }
 
       setTimeout(() => {
