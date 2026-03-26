@@ -411,11 +411,6 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                       {viewingExercise.difficulty === 'beginner' ? 'Principiante' :
                        viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
-                    {(viewingExercise.reps || viewingExercise.duration) && (
-                      <span className="text-sm px-3 py-1 rounded bg-zinc-700 text-zinc-300">
-                        {viewingExercise.reps ? `${viewingExercise.reps} reps` : `${viewingExercise.duration}s`}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>

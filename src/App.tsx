@@ -484,11 +484,6 @@ function App() {
                       {viewingExerciseData?.difficulty === 'beginner' ? 'Principiante' :
                        viewingExerciseData?.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
-                    {(viewingExerciseData?.reps || viewingExerciseData?.duration) && (
-                      <span className="text-sm px-3 py-1 rounded bg-zinc-700 text-zinc-300">
-                        {viewingExerciseData?.reps ? `${viewingExerciseData.reps} reps` : `${viewingExerciseData?.duration}s`}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
