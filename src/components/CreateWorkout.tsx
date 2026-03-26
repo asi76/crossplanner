@@ -57,9 +57,11 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
     loadData();
   }, []);
 
-  // Get exercises for a specific group
+  // Get exercises for a specific group (sorted alphabetically)
   const getExercisesByGroup = (groupId: string): Exercise[] => {
-    return exercises.filter(e => e.group_id === groupId);
+    return exercises
+      .filter(e => e.group_id === groupId)
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const toggleGroup = (groupId: string) => {
@@ -281,7 +283,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
 
               {/* Exercises List */}
               {expandedGroups.has(group.id) && (
-                <div className="border-t border-zinc-800">
+                <div className="border-t border-zinc-800 max-h-96 overflow-y-auto scrollbar-dark">
                   {getExercisesByGroup(group.id).length === 0 ? (
                     <div className="px-5 py-8 text-center text-zinc-500">
                       Nessun esercizio
