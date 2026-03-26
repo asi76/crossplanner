@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Exercise } from '../data/types';
 import { supabase } from '../supabase';
+import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 const SUPABASE_URL = 'https://kdsstxsthxusgcizzmpr.supabase.co';
 
