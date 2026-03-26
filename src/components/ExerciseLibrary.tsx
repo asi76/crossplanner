@@ -131,6 +131,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // View exercise - load GIF too
   const handleViewExercise = async (exercise: Exercise) => {
+    setSelectedExerciseGif(null); // Reset first
     setSelectedExercise(exercise);
     setCreateGroupId(null);
     setModalMode('view');
@@ -143,9 +144,10 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     }
   };
 
-  // Close modal - reload exercises to show updated data
+  // Close modal - reload exercises to show updated data and clear GIF
   const handleCloseModal = () => {
     setSelectedExercise(null);
+    setSelectedExerciseGif(null);
     setCreateGroupId(null);
     setModalMode('view');
     loadExercises();

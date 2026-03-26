@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search, Save, Edit3 } from 'lucide-react';
 import { Exercise } from '../data/types';
 import { supabase } from '../supabase';
-import { setGifUrl, removeGifUrl } from '../data/gifMapping';
+import { getGifUrl, setGifUrl, removeGifUrl } from '../data/gifMapping';
 
 interface ExerciseDetailModalProps {
   exercise: Exercise;
@@ -59,6 +59,17 @@ export function ExerciseDetailModal({
     setEditDescription(exercise.description || '');
     setIsEditing(propMode === 'edit' || propMode === 'create');
   }, [exercise, propMode]);
+
+  // Load GIF if not provided by parent
+  useEffect(() => {
+    if (!gifUrl && onGifUpdated && exercise?.id) {
+      getGifUrl(exercise.id).then(url => {
+        if (url && onGifUpdated) {
+          onGifUpdated(exercise.id, url);
+        }
+      }).catch(() => {});
+    }
+  }, [exercise, gifUrl]);
 
   const difficultyColor = {
     beginner: 'bg-green-500/20 text-green-400 border-green-500/30',
