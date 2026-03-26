@@ -1,23 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Exercise } from '../data/types';
-import { getGifUrl as getStoredGifUrl, initGifMappings } from '../data/gifMapping';
-import { ExerciseDetailModal } from './ExerciseDetailModal';
+import { supabase } from '../supabase';
+
+const SUPABASE_URL = 'https://kdsstxsthxusgcizzmpr.supabase.co';
 
 const muscleGroups: MuscleGroup[] = ['upper-push', 'upper-pull', 'lower-body', 'core', 'plyometric', 'cardio'];
+
+// Load GIF URLs from database
+async function loadGifMappings(): Promise<Record<string, string>> {
+  const mapping: Record<string, string> = {};
+  
+  try {
+    const { data, error } = await supabase
+      .from('gif_mappings')
+      .select('exercise_id, gif_url');
+    
+    if (error) {
+      console.error('Error loading GIF mappings:', error);
+      return mapping;
+    }
+    
+    if (data && data.length > 0) {
+      data.forEach(row => {
+        mapping[row.exercise_id] = row.gif_url;
+      });
+    }
+  } catch (err) {
+    console.error('Error:', err);
+  }
+  
+  return mapping;
+}
 
 export function ExerciseLibrary() {
   const [expandedGroup, setExpandedGroup] = useState<MuscleGroup | null>('upper-push');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [gifReady, setGifReady] = useState(false);
+  const [gifMapping, setGifMapping] = useState<Record<string, string>>({});
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Load GIF mappings from Supabase on mount
   useEffect(() => {
-    initGifMappings().then(() => {
-      setGifReady(true);
+    loadGifMappings().then(mapping => {
+      setGifMapping(mapping);
     });
-  }, []);
+  }, [refreshKey]);
 
   const allExercises = exercises;
 
@@ -45,13 +73,16 @@ export function ExerciseLibrary() {
     setSelectedExercise(exercise);
   };
 
-  const handleGifUpdated = () => {
-    // Force re-render to show updated GIF
-    setSelectedExercise(prev => prev ? { ...prev } : null);
-  };
+  // Reload GIF URLs after upload/delete
+  const handleGifUpdated = useCallback(() => {
+    setRefreshKey(k => k + 1);
+    loadGifMappings().then(mapping => {
+      setGifMapping(mapping);
+    });
+  }, []);
 
   const getGifUrl = (exerciseId: string): string | null => {
-    return getStoredGifUrl(exerciseId);
+    return gifMapping[exerciseId] || null;
   };
 
   return (
