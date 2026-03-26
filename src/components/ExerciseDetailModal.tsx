@@ -342,24 +342,24 @@ export function ExerciseDetailModal({
               <>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors"
+                  className="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium rounded-lg transition-colors"
                 >
                   Annulla
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
+                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="w-3 h-3" />
                   Salva
                 </button>
               </>
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-zinc-400" />
+              <X className="w-4 h-4 text-zinc-400" />
             </button>
           </div>
         </div>
@@ -549,14 +549,14 @@ export function ExerciseDetailModal({
                 </div>
               </div>
             ) : (
-              /* View Mode */
-              <div className="space-y-6">
+              /* View Mode - compact */
+              <div className="space-y-4">
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${difficultyColor}`}>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${difficultyColor}`}>
                     {difficultyLabel}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
                     exercise.tipo === 'aerobico' 
                       ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' 
                       : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
@@ -564,14 +564,14 @@ export function ExerciseDetailModal({
                     {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                   </span>
                   {exercise.reps && (
-                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
-                      <Zap className="w-4 h-4" />
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
                       {exercise.reps} reps
                     </span>
                   )}
                   {exercise.duration && (
-                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
                       {exercise.duration}s
                     </span>
                   )}
@@ -579,12 +579,12 @@ export function ExerciseDetailModal({
 
                 {/* Muscles */}
                 <div>
-                  <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli coinvolti</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <h3 className="text-xs font-medium text-zinc-400 mb-1">Muscoli</h3>
+                  <div className="flex flex-wrap gap-1.5">
                     {exercise.muscles?.map((muscle) => (
                       <span
                         key={muscle}
-                        className="px-3 py-1 rounded-full text-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                       >
                         {muscle}
                       </span>
@@ -594,22 +594,22 @@ export function ExerciseDetailModal({
 
                 {/* Description */}
                 <div>
-                  <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                  <p className="text-zinc-200 leading-relaxed">{editDescription || getDescription(exercise.name)}</p>
+                  <h3 className="text-xs font-medium text-zinc-400 mb-1">Descrizione</h3>
+                  <p className="text-zinc-300 text-xs leading-relaxed">{editDescription || getDescription(exercise.name)}</p>
                 </div>
 
                 {/* Navigation and Edit */}
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
                   <button
                     onClick={onPrev}
                     disabled={!hasPrev}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors ${
                       hasPrev
                         ? 'bg-zinc-800 hover:bg-zinc-700 text-white'
                         : 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed'
                     }`}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3 h-3" />
                     Precedente
                   </button>
                   <div className="flex gap-2">
@@ -618,9 +618,9 @@ export function ExerciseDetailModal({
                         setIsEditing(true);
                         if (onEdit) onEdit();
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs transition-colors"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-3 h-3" />
                       Modifica
                     </button>
                     <button
