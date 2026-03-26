@@ -256,18 +256,16 @@ export function ExerciseDetailModal({
     }
   };
 
-  // Open Google Images search for this exercise - 600x400 positioned at bottom-left of drag-drop area
+  // Open Google Images search for this exercise
   const searchGif = () => {
     const query = encodeURIComponent(`${exercise.name} exercise gif`);
     const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
-    // 600x400, bottom-left aligned to where drag-drop area starts (approximate)
-    const width = 600;
-    const height = 400;
-    const screenWidth = window.screen.width;
-    const screenHeight = window.screen.height;
-    // Position at left side, slightly up from bottom
-    const left = Math.round((screenWidth - width) / 4);
-    const top = Math.round(screenHeight - height - 150);
+    // Position popup top-left aligned with modal's top-left corner
+    // Modal is centered, so popup will also be centered with same alignment
+    const width = 680;
+    const height = 500;
+    const left = Math.round((window.innerWidth - width) / 2);
+    const top = Math.round((window.innerHeight - height) / 2);
     window.open(searchUrl, 'gifsearch', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
   };
 
