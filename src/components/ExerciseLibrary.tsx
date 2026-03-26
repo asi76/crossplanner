@@ -130,30 +130,48 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // Save exercise (create or update)
   const handleSaveExercise = async (exerciseData: Partial<Exercise>) => {
-    if (modalMode === 'create' && createGroupId) {
-      const newId = `${createGroupId}-${Date.now()}`;
-      await supabase.from('exercises').insert({
-        id: newId,
-        group_id: createGroupId,
-        name: exerciseData.name,
-        muscles: exerciseData.muscles || [],
-        reps: exerciseData.reps || null,
-        duration: exerciseData.duration || null,
-        difficulty: exerciseData.difficulty || 'intermediate',
-        description: exerciseData.description || ''
-      });
-    } else if (modalMode === 'edit' && selectedExercise) {
-      await supabase.from('exercises').update({
-        name: exerciseData.name,
-        muscles: exerciseData.muscles,
-        reps: exerciseData.reps,
-        duration: exerciseData.duration,
-        difficulty: exerciseData.difficulty,
-        description: exerciseData.description
-      }).eq('id', selectedExercise.id);
+    try {
+      if (modalMode === 'create' && createGroupId) {
+        const newId = `${createGroupId}-${Date.now()}`;
+        const { error } = await supabase.from('exercises').insert({
+          id: newId,
+          group_id: createGroupId,
+          name: exerciseData.name || '',
+          muscles: exerciseData.muscles || [],
+          reps: exerciseData.reps || null,
+          duration: exerciseData.duration || null,
+          difficulty: exerciseData.difficulty || 'intermediate',
+          description: exerciseData.description || ''
+        });
+        
+        if (error) {
+          console.error('Error creating exercise:', error);
+          alert('Errore: ' + error.message);
+          return;
+        }
+      } else if (modalMode === 'edit' && selectedExercise) {
+        const { error } = await supabase.from('exercises').update({
+          name: exerciseData.name,
+          muscles: exerciseData.muscles,
+          reps: exerciseData.reps,
+          duration: exerciseData.duration,
+          difficulty: exerciseData.difficulty,
+          description: exerciseData.description
+        }).eq('id', selectedExercise.id);
+        
+        if (error) {
+          console.error('Error updating exercise:', error);
+          alert('Errore: ' + error.message);
+          return;
+        }
+      }
+      
+      loadExercises();
+      handleCloseModal();
+    } catch (err) {
+      console.error('Error saving exercise:', err);
+      alert('Errore durante il salvataggio');
     }
-    loadExercises();
-    handleCloseModal();
   };
 
   // Add new group
