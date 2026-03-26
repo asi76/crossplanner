@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Exercise } from '../data/types';
-import { getGifUrl as getStoredGifUrl } from '../data/gifMapping';
+import { getGifUrl as getStoredGifUrl, initGifMappings } from '../data/gifMapping';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 const muscleGroups: MuscleGroup[] = ['upper-push', 'upper-pull', 'lower-body', 'core', 'plyometric', 'cardio'];
@@ -10,6 +10,14 @@ const muscleGroups: MuscleGroup[] = ['upper-push', 'upper-pull', 'lower-body', '
 export function ExerciseLibrary() {
   const [expandedGroup, setExpandedGroup] = useState<MuscleGroup | null>('upper-push');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [gifReady, setGifReady] = useState(false);
+
+  // Load GIF mappings from Supabase on mount
+  useEffect(() => {
+    initGifMappings().then(() => {
+      setGifReady(true);
+    });
+  }, []);
 
   const allExercises = exercises;
 
