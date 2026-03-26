@@ -421,10 +421,10 @@ function App() {
             className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
               <div className="flex items-center gap-3">
                 <Target className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-xl font-bold text-white">
                   {viewingExercise.exerciseName || viewingExercise.exerciseId}
                 </h2>
               </div>
@@ -453,30 +453,30 @@ function App() {
               <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                    <p className="text-zinc-300 text-base leading-relaxed">
+                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Descrizione</h3>
+                    <p className="text-zinc-300 text-sm leading-relaxed">
                       {viewingExerciseData?.description || 'Nessuna descrizione disponibile.'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
-                    <div className="flex flex-wrap gap-2">
+                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Muscoli</h3>
+                    <div className="flex flex-wrap gap-1.5">
                       {viewingExerciseData?.muscles?.map((muscle: string, idx: number) => (
-                        <span key={idx} className="px-2 py-1 rounded text-sm bg-white/20 text-white border border-white/30">
+                        <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white border border-white/30">
                           {muscle}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm px-3 py-1 rounded ${
+                    <span className={`text-xs px-2 py-0.5 rounded ${
                       viewingExerciseData?.tipo === 'aerobico' 
                         ? 'bg-blue-500/20 text-blue-400' 
                         : 'bg-orange-500/20 text-orange-400'
                     }`}>
                       {viewingExerciseData?.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                     </span>
-                    <span className={`text-sm px-3 py-1 rounded ${
+                    <span className={`text-xs px-2 py-0.5 rounded ${
                       viewingExerciseData?.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
                       viewingExerciseData?.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-red-500/20 text-red-400'
@@ -485,7 +485,7 @@ function App() {
                        viewingExerciseData?.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
                     {(viewingExerciseData?.reps || viewingExerciseData?.duration) && (
-                      <span className="text-sm px-3 py-1 rounded bg-zinc-700 text-zinc-300">
+                      <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
                         {viewingExerciseData?.reps ? `${viewingExerciseData.reps} reps` : `${viewingExerciseData?.duration}s`}
                       </span>
                     )}

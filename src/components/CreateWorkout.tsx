@@ -339,11 +339,11 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+            {/* Header - 20% smaller */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
               <div className="flex items-center gap-3">
                 <Target className="w-5 h-5 text-blue-500" />
-                <h2 className="text-xl font-bold text-white">{viewingExercise.name}</h2>
+                <h2 className="text-lg font-bold text-white">{viewingExercise.name}</h2>
               </div>
               <button
                 onClick={() => setViewingExercise(null)}
@@ -376,18 +376,18 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                 <div className="space-y-4">
                   {/* Descrizione */}
                   <div>
-                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Descrizione</h3>
-                    <p className="text-zinc-300 text-xs leading-relaxed">
+                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
+                    <p className="text-zinc-300 text-base leading-relaxed">
                       {viewingExercise.description || 'Nessuna descrizione disponibile.'}
                     </p>
                   </div>
 
                   {/* Muscoli */}
                   <div>
-                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Muscoli</h3>
-                    <div className="flex flex-wrap gap-1.5">
+                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
+                    <div className="flex flex-wrap gap-2">
                       {viewingExercise.muscles?.map((muscle, idx) => (
-                        <span key={idx} className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
+                        <span key={idx} className="px-2 py-1 rounded text-sm bg-white/20 text-white border border-white/30">
                           {muscle}
                         </span>
                       ))}
@@ -396,14 +396,14 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
                   {/* Tipo e Difficolta */}
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-sm px-3 py-1 rounded ${
                       viewingExercise.tipo === 'aerobico' 
                         ? 'bg-blue-500/20 text-blue-400' 
                         : 'bg-orange-500/20 text-orange-400'
                     }`}>
                       {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-sm px-3 py-1 rounded ${
                       viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
                       viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-red-500/20 text-red-400'
@@ -412,7 +412,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                        viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
                     {(viewingExercise.reps || viewingExercise.duration) && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
+                      <span className="text-sm px-3 py-1 rounded bg-zinc-700 text-zinc-300">
                         {viewingExercise.reps ? `${viewingExercise.reps} reps` : `${viewingExercise.duration}s`}
                       </span>
                     )}
