@@ -47,6 +47,7 @@ export function ExerciseDetailModal({
   const [editReps, setEditReps] = useState(exercise.reps?.toString() || '');
   const [editDuration, setEditDuration] = useState(exercise.duration?.toString() || '');
   const [editDifficulty, setEditDifficulty] = useState(exercise.difficulty || 'intermediate');
+  const [editTipo, setEditTipo] = useState(exercise.tipo || 'anaerobico');
   const [editDescription, setEditDescription] = useState(exercise.description || '');
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export function ExerciseDetailModal({
     setEditReps(exercise.reps?.toString() || '');
     setEditDuration(exercise.duration?.toString() || '');
     setEditDifficulty(exercise.difficulty || 'intermediate');
+    setEditTipo(exercise.tipo || 'anaerobico');
     setEditDescription(exercise.description || '');
     setIsEditing(propMode === 'edit' || propMode === 'create');
   }, [exercise, propMode]);
@@ -300,6 +302,7 @@ export function ExerciseDetailModal({
       reps: editReps ? parseInt(editReps) : null,
       duration: editDuration ? parseInt(editDuration) : null,
       difficulty: editDifficulty,
+      tipo: editTipo,
       description: editDescription
     });
   };
@@ -502,6 +505,17 @@ export function ExerciseDetailModal({
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">Tipo</label>
+                  <select
+                    value={editTipo}
+                    onChange={(e) => setEditTipo(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="anaerobico">Anaerobico</option>
+                    <option value="aerobico">Aerobico</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Descrizione</label>
                   <textarea
                     value={editDescription}
@@ -534,6 +548,13 @@ export function ExerciseDetailModal({
                 <div className="flex flex-wrap gap-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium border ${difficultyColor}`}>
                     {difficultyLabel}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${
+                    exercise.tipo === 'aerobico' 
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' 
+                      : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                  }`}>
+                    {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                   </span>
                   {exercise.reps && (
                     <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">

@@ -12,6 +12,7 @@ export interface Exercise {
   muscleGroup: MuscleGroup;
   muscles: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  tipo?: 'aerobico' | 'anaerobico';
   reps?: number;
   duration?: number;
   description?: string;

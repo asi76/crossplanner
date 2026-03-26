@@ -20,6 +20,7 @@ interface Exercise {
   reps: number | null;
   duration: number | null;
   difficulty: string;
+  tipo?: 'aerobico' | 'anaerobico';
   description: string;
 }
 

@@ -21,6 +21,7 @@ interface Exercise {
   reps: number | null;
   duration: number | null;
   difficulty: string;
+  tipo?: 'aerobico' | 'anaerobico';
   description: string;
 }
 
@@ -166,6 +167,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           reps: exerciseData.reps || null,
           duration: exerciseData.duration || null,
           difficulty: exerciseData.difficulty || 'intermediate',
+          tipo: exerciseData.tipo || 'anaerobico',
           description: exerciseData.description || ''
         });
         
@@ -181,6 +183,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           reps: exerciseData.reps,
           duration: exerciseData.duration,
           difficulty: exerciseData.difficulty,
+          tipo: exerciseData.tipo,
           description: exerciseData.description
         }).eq('id', selectedExercise.id);
         
