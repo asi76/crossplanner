@@ -218,7 +218,6 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     onClick={() => exerciseData && handleViewExercise(exerciseData)}
                     className="flex items-center gap-3 flex-1 text-left"
                   >
-                    <Dumbbell className="w-5 h-5 text-blue-400" />
                     <span className="text-white font-medium">{ex.exerciseName || ex.exerciseId}</span>
                   </button>
                   <button

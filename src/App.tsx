@@ -12,7 +12,9 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
-  Target
+  Target,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useWorkout } from './hooks/useWorkout';
@@ -197,6 +199,13 @@ function App() {
               </button>
             )}
             <button
+              onClick={() => window.location.reload()}
+              className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
               onClick={signOut}
               className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
               title="Sign Out"
@@ -300,7 +309,7 @@ function App() {
                       className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
                       title="Elimina"
                     >
-                      <LogOut className="w-5 h-5 text-red-400" />
+                      <Trash2 className="w-5 h-5 text-red-400" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -361,8 +370,8 @@ function App() {
                         })}
                       </div>
 
-                      {/* Exercise List for selected category */}
-                      <div className="p-4">
+                      {/* Exercise List - fixed height container, no dumbbell icon */}
+                      <div className="p-4 min-h-[200px]">
                         {getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
                           const exerciseData = getExerciseById(ex.exerciseId);
                           return (
@@ -380,12 +389,9 @@ function App() {
                               className="bg-dark-bg rounded-lg p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors w-full mb-2 last:mb-0"
                             >
                               <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-3">
-                                  <Dumbbell className="w-4 h-4 text-blue-400" />
-                                  <span className="text-white text-sm font-medium">
-                                    {ex.exerciseName || ex.exerciseId}
-                                  </span>
-                                </div>
+                                <span className="text-white text-sm font-medium">
+                                  {ex.exerciseName || ex.exerciseId}
+                                </span>
                                 <div className="flex items-center gap-1">
                                   {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
                                     <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
