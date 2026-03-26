@@ -28,21 +28,28 @@ interface CreateWorkoutProps {
   onSave: (workout: any) => void;
 }
 
+// Fixed workout categories
+const WORKOUT_CATEGORIES = [
+  { id: 'forza', name: 'Forza' },
+  { id: 'cardio1', name: 'Cardio 1' },
+  { id: 'cardio2', name: 'Cardio 2' }
+];
+
 export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
   const [workoutName, setWorkoutName] = useState('');
-  const [stations, setStations] = useState<any[]>([
-    { id: '1', name: 'Station 1', exercises: [] }
+  const [workoutCategories, setWorkoutCategories] = useState<any[]>([
+    { id: 'forza', name: 'Forza', exercises: [] },
+    { id: 'cardio1', name: 'Cardio 1', exercises: [] },
+    { id: 'cardio2', name: 'Cardio 2', exercises: [] }
   ]);
-  const [selectedStationIndex, setSelectedStationIndex] = useState(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('forza');
   const [groups, setGroups] = useState<ExerciseGroup[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [selectedExerciseGif, setSelectedExerciseGif] = useState<string | null>(null);
   const [viewingExercise, setViewingExercise] = useState<Exercise | null>(null);
   const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
 
-  const currentStation = stations[selectedStationIndex];
+  const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
   // Load groups and exercises from Supabase
   const loadData = async () => {
@@ -80,25 +87,6 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
 
 
 
-  const handleAddStation = () => {
-    const newStation = {
-      id: Date.now().toString(),
-      name: `Station ${stations.length + 1}`,
-      exercises: []
-    };
-    setStations([...stations, newStation]);
-    setSelectedStationIndex(stations.length);
-  };
-
-  const handleRemoveStation = (index: number) => {
-    if (stations.length === 1) return;
-    const newStations = stations.filter((_, i) => i !== index);
-    setStations(newStations);
-    if (selectedStationIndex >= newStations.length) {
-      setSelectedStationIndex(newStations.length - 1);
-    }
-  };
-
   const handleAddExercise = (exercise: Exercise) => {
     const newExercise = {
       exerciseId: exercise.id,
@@ -108,19 +96,25 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
       exerciseName: exercise.name
     };
 
-    const newStations = [...stations];
-    newStations[selectedStationIndex].exercises.push(newExercise);
-    setStations(newStations);
+    const newCategories = [...workoutCategories];
+    const catIndex = newCategories.findIndex(c => c.id === selectedCategoryId);
+    if (catIndex !== -1) {
+      newCategories[catIndex].exercises.push(newExercise);
+      setWorkoutCategories(newCategories);
+    }
   };
 
-  const handleRemoveExercise = (stationIndex: number, exerciseIndex: number) => {
-    const newStations = [...stations];
-    newStations[stationIndex].exercises.splice(exerciseIndex, 1);
-    setStations(newStations);
+  const handleRemoveExercise = (categoryId: string, exerciseIndex: number) => {
+    const newCategories = [...workoutCategories];
+    const catIndex = newCategories.findIndex(c => c.id === categoryId);
+    if (catIndex !== -1) {
+      newCategories[catIndex].exercises.splice(exerciseIndex, 1);
+      setWorkoutCategories(newCategories);
+    }
   };
 
   const handleSave = async () => {
-    if (!workoutName.trim() || stations.every(s => s.exercises.length === 0)) {
+    if (!workoutName.trim() || workoutCategories.every(s => s.exercises.length === 0)) {
       alert('Inserisci un nome e aggiungi almeno un esercizio');
       return;
     }
@@ -128,7 +122,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
     const workout = {
       id: Date.now().toString(),
       name: workoutName,
-      stations: stations.filter(s => s.exercises.length > 0),
+      stations: workoutCategories.filter(s => s.exercises.length > 0),
       createdAt: new Date().toISOString()
     };
 
@@ -137,7 +131,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
 
     onSave(workout);
     setWorkoutName('');
-    setStations([{ id: '1', name: 'Station 1', exercises: [] }]);
+    setWorkoutCategories(WORKOUT_CATEGORIES.map(c => ({ ...c, exercises: [] })));
   };
 
   return (
@@ -165,47 +159,32 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
         className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
       />
 
-      {/* Stations Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {stations.map((station, index) => (
-          <div key={station.id} className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedStationIndex(index)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedStationIndex === index
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-              }`}
-            >
-              {station.name}
-            </button>
-            {stations.length > 1 && (
-              <button
-                onClick={() => handleRemoveStation(index)}
-                className="p-1 text-zinc-500 hover:text-red-400"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+      {/* Category Tabs - Fixed Forza, Cardio 1, Cardio 2 */}
+      <div className="flex gap-2">
+        {WORKOUT_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setSelectedCategoryId(cat.id)}
+            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              selectedCategoryId === cat.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+            }`}
+          >
+            {cat.name}
+          </button>
         ))}
-        <button
-          onClick={handleAddStation}
-          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          + Station
-        </button>
       </div>
 
-      {/* Current Station Exercises */}
+      {/* Current Category Exercises */}
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-        <h3 className="text-white font-semibold mb-3">{currentStation.name}</h3>
+        <h3 className="text-white font-semibold mb-3">{currentCategory.name}</h3>
         
-        {currentStation.exercises.length === 0 ? (
+        {currentCategory.exercises.length === 0 ? (
           <p className="text-zinc-500 text-sm">Nessun esercizio. Aggiungi dalla lista sotto.</p>
         ) : (
           <div className="space-y-2">
-            {currentStation.exercises.map((ex: any, index: number) => (
+            {currentCategory.exercises.map((ex: any, index: number) => (
               <div key={index} className="flex items-center justify-between bg-zinc-800 rounded-lg p-3">
                 <button
                   onClick={() => {
@@ -222,7 +201,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                     {ex.sets} × {ex.reps}
                   </span>
                   <button
-                    onClick={() => handleRemoveExercise(selectedStationIndex, index)}
+                    onClick={() => handleRemoveExercise(selectedCategoryId, index)}
                     className="p-1 text-zinc-500 hover:text-red-400"
                   >
                     <Trash2 className="w-4 h-4" />
