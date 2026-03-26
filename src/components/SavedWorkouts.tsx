@@ -66,8 +66,10 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
     });
   };
 
-  const handleDelete = async (workoutId: string) => {
-    if (!confirm('Eliminare questo workout?')) return;
+  const handleDelete = async (workoutId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Sei sicuro di voler eliminare questo workout?')) return;
+    if (!confirm('Conferma eliminazione definitiva?')) return;
     
     try {
       await supabase.from('workouts').delete().eq('id', workoutId);
@@ -151,13 +153,11 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
                     Avvia
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(workout.id);
-                    }}
-                    className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                    onClick={(e) => handleDelete(workout.id, e)}
+                    className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
+                    title="Elimina workout"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-5 h-5 text-red-400" />
                   </button>
                 </div>
               </div>
@@ -165,6 +165,18 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
               {/* Expanded Content - Category Tabs and Exercises */}
               {expandedWorkout === workout.id && (
                 <div className="border-t border-zinc-800">
+                  {/* Header with trash */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/30 border-b border-zinc-800">
+                    <span className="text-zinc-400 text-sm">Esercizi salvati</span>
+                    <button
+                      onClick={(e) => handleDelete(workout.id, e)}
+                      className="p-1.5 bg-red-500/20 hover:bg-red-500/30 rounded transition-colors"
+                      title="Elimina workout"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+
                   {/* Category Tabs */}
                   <div className="flex gap-2 p-4 border-b border-zinc-800">
                     {WORKOUT_CATEGORIES.map((cat) => {
