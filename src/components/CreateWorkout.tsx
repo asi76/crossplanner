@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Plus, X, Dumbbell, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Workout, Station, WorkoutExercise, Exercise } from '../data/types';
-import { supabase } from '../supabase';
 import { getGifUrl } from '../data/gifMapping';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 
@@ -106,19 +105,6 @@ export function CreateWorkout({ onSave }: CreateWorkoutProps) {
       stations: stations.filter(s => s.exercises.length > 0),
       createdAt: new Date()
     };
-
-    try {
-      await supabase
-        .from('workouts')
-        .insert({
-          id: workout.id,
-          name: workout.name,
-          stations: workout.stations,
-          created_at: workout.createdAt.toISOString()
-        });
-    } catch (err) {
-      console.error('Error:', err);
-    }
 
     onSave(workout);
     setWorkoutName('');

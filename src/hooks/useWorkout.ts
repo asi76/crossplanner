@@ -1,50 +1,93 @@
 import { useState, useCallback } from 'react';
 import { Workout, Station } from '../data/types';
-
-const STORAGE_KEY = 'crosstraining_workouts';
+import { supabase } from '../supabase';
 
 export const useWorkout = () => {
   const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [savedWorkouts, setSavedWorkouts] = useState<Workout[]>([]);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
 
-  const loadSavedWorkouts = useCallback(() => {
+  const loadSavedWorkouts = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSavedWorkouts(JSON.parse(stored));
+      const { data, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error loading workouts:', error);
+        return;
+      }
+      
+      if (data) {
+        const workouts: Workout[] = data.map(w => ({
+          id: w.id,
+          name: w.name,
+          stations: w.stations || [],
+          createdAt: new Date(w.created_at)
+        }));
+        setSavedWorkouts(workouts);
       }
     } catch (error) {
       console.error('Error loading workouts:', error);
     }
   }, []);
 
-  const saveWorkout = useCallback((workout: Workout) => {
+  const saveWorkout = useCallback(async (workout: Workout) => {
     try {
-      const workouts = [...savedWorkouts, { ...workout, id: Date.now().toString(), savedAt: new Date().toISOString() }];
-      setSavedWorkouts(workouts);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
+      // Check if already exists in Supabase
+      const { data: existing } = await supabase
+        .from('workouts')
+        .select('id')
+        .eq('id', workout.id)
+        .maybeSingle();
+      
+      if (!existing) {
+        // Only insert if doesn't exist (avoid duplicates)
+        await supabase
+          .from('workouts')
+          .insert({
+            id: workout.id,
+            name: workout.name,
+            stations: workout.stations,
+            created_at: workout.createdAt instanceof Date 
+              ? workout.createdAt.toISOString() 
+              : workout.createdAt
+          });
+      }
+      
+      // Update local state
+      setSavedWorkouts(prev => {
+        const exists = prev.find(w => w.id === workout.id);
+        if (exists) {
+          return prev.map(w => w.id === workout.id ? workout : w);
+        }
+        return [...prev, workout];
+      });
     } catch (error) {
       console.error('Error saving workout:', error);
     }
-  }, [savedWorkouts]);
+  }, []);
 
-  const deleteWorkout = useCallback((id: string) => {
+  const deleteWorkout = useCallback(async (id: string) => {
     try {
-      const workouts = savedWorkouts.filter(w => w.id !== id);
-      setSavedWorkouts(workouts);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
+      await supabase
+        .from('workouts')
+        .delete()
+        .eq('id', id);
+      
+      setSavedWorkouts(prev => prev.filter(w => w.id !== id));
     } catch (error) {
       console.error('Error deleting workout:', error);
     }
-  }, [savedWorkouts]);
+  }, []);
 
   const createNewWorkout = useCallback((stations: Station[]) => {
     const workout: Workout = {
       id: Date.now().toString(),
       name: 'New Workout',
       stations,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     setCurrentWorkout(workout);
     setCurrentStationIndex(0);
