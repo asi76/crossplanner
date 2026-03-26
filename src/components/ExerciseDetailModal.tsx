@@ -13,6 +13,7 @@ interface ExerciseDetailModalProps {
   hasPrev?: boolean;
   hasNext?: boolean;
   onGifUpdated?: (exerciseId: string, newUrl: string | null) => void;
+  showUpload?: boolean;
 }
 
 export function ExerciseDetailModal({
@@ -24,6 +25,7 @@ export function ExerciseDetailModal({
   hasPrev,
   hasNext,
   onGifUpdated,
+  showUpload = true,
 }: ExerciseDetailModalProps) {
   const [imageError, setImageError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
