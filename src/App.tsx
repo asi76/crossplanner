@@ -349,17 +349,6 @@ function App() {
                           );
                         })}
                       </div>
-
-                      {/* Avvia Button */}
-                      <div className="p-4">
-                        <button
-                          onClick={() => handleStartWorkout(workout)}
-                          className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Play className="w-5 h-5" />
-                          Avvia Workout
-                        </button>
-                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
