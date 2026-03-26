@@ -16,16 +16,15 @@ CREATE TABLE IF NOT EXISTS exercises (
   muscles TEXT[] DEFAULT '{}',
   reps INTEGER,
   duration INTEGER,
-  difficulty TEXT DEFAULT 'intermediate' CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
+  difficulty TEXT DEFAULT 'intermediate',
   description TEXT DEFAULT '',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Disable RLS for simplicity
 ALTER TABLE exercise_groups DISABLE ROW LEVEL SECURITY;
 ALTER TABLE exercises DISABLE ROW LEVEL SECURITY;
 
--- Insert default groups
+-- Insert default groups if not exist
 INSERT INTO exercise_groups (id, name, label, color_class, sort_order) VALUES
   ('upper-push', 'Upper Push', 'Upper Push', 'bg-blue-500/20 text-blue-400 border-blue-500/30', 1),
   ('upper-pull', 'Upper Pull', 'Upper Pull', 'bg-green-500/20 text-green-400 border-green-500/30', 2),

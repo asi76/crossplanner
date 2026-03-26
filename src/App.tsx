@@ -119,16 +119,7 @@ function App() {
 
   if (currentView === 'library') {
     return (
-      <div>
-        <ExerciseLibrary />
-        <button
-          onClick={() => setCurrentView('home')}
-          className="fixed bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          Back
-        </button>
-      </div>
+      <ExerciseLibrary onBack={() => setCurrentView('home')} />
     );
   }
 

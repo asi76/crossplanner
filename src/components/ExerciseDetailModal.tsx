@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search, Save } from 'lucide-react';
 import { Exercise } from '../data/types';
 import { supabase } from '../supabase';
 import { setGifUrl, removeGifUrl } from '../data/gifMapping';
 
+type ModalMode = 'view' | 'edit' | 'create';
+
 interface ExerciseDetailModalProps {
   exercise: Exercise;
-  gifUrl: string | null;
+  mode?: ModalMode;
+  gifUrl?: string | null;
   onClose: () => void;
+  onSave?: (exerciseData: Partial<Exercise>) => void;
   onPrev?: () => void;
   onNext?: () => void;
   hasPrev?: boolean;
@@ -18,8 +22,10 @@ interface ExerciseDetailModalProps {
 
 export function ExerciseDetailModal({
   exercise,
-  gifUrl,
+  mode = 'view',
+  gifUrl = null,
   onClose,
+  onSave,
   onPrev,
   onNext,
   hasPrev,
@@ -34,21 +40,37 @@ export function ExerciseDetailModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Form state for edit/create mode
+  const [editName, setEditName] = useState(exercise.name);
+  const [editMuscles, setEditMuscles] = useState(exercise.muscles?.join(', ') || '');
+  const [editReps, setEditReps] = useState(exercise.reps?.toString() || '');
+  const [editDuration, setEditDuration] = useState(exercise.duration?.toString() || '');
+  const [editDifficulty, setEditDifficulty] = useState(exercise.difficulty || 'intermediate');
+  const [editDescription, setEditDescription] = useState(exercise.description || '');
+
   useEffect(() => {
     setImageError(false);
-  }, [gifUrl]);
+    setEditName(exercise.name);
+    setEditMuscles(exercise.muscles?.join(', ') || '');
+    setEditReps(exercise.reps?.toString() || '');
+    setEditDuration(exercise.duration?.toString() || '');
+    setEditDifficulty(exercise.difficulty || 'intermediate');
+    setEditDescription(exercise.description || '');
+  }, [exercise]);
+
+  const isEditable = mode === 'edit' || mode === 'create';
 
   const difficultyColor = {
     beginner: 'bg-green-500/20 text-green-400 border-green-500/30',
     intermediate: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     advanced: 'bg-red-500/20 text-red-400 border-red-500/30',
-  }[exercise.difficulty];
+  }[exercise.difficulty] || 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
 
   const difficultyLabel = {
     beginner: 'Principiante',
     intermediate: 'Intermedio',
     advanced: 'Avanzato',
-  }[exercise.difficulty];
+  }[exercise.difficulty] || 'Intermedio';
 
   const getDescription = (name: string): string => {
     const descriptions: Record<string, string> = {
@@ -119,7 +141,22 @@ export function ExerciseDetailModal({
       'Fast Feet': 'Movimento rapido dei piedi sul posto. Agilità e cardio.',
       'Plank Jacks': 'In plank, salta aprendo e chiudendo le gambe come un jumping jack. Cardio e core.',
     };
-    return descriptions[exercise.name] || `Esercizio per ${exercise.muscles.join(', ')}. Mantieni una forma corretta durante l'esecuzione.`;
+    return descriptions[name] || `Esercizio per ${(exercise.muscles || []).join(', ')}. Mantieni una forma corretta durante l'esecuzione.`;
+  };
+
+  const handleSave = () => {
+    if (!onSave) return;
+    
+    const musclesArray = editMuscles.split(',').map(m => m.trim()).filter(m => m);
+    
+    onSave({
+      name: editName,
+      muscles: musclesArray,
+      reps: editReps ? parseInt(editReps) : null,
+      duration: editDuration ? parseInt(editDuration) : null,
+      difficulty: editDifficulty,
+      description: editDescription
+    });
   };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -152,18 +189,17 @@ export function ExerciseDetailModal({
     }
   }, [exercise.id]);
 
-  // Upload file to Supabase storage
   const uploadFile = async (file: File) => {
+    if (!exercise.id) return;
+    
     setIsUploading(true);
     setUploadProgress('Caricamento in corso...');
 
     try {
-      // Use timestamp in filename to avoid conflicts
       const timestamp = Date.now();
       const ext = file.name.split('.').pop() || 'gif';
       const filename = `${exercise.id}_${timestamp}.${ext}`;
       
-      // First delete any existing file for this exercise
       const { data: existingFiles } = await supabase.storage
         .from('gifs')
         .list('', { search: exercise.id });
@@ -173,7 +209,6 @@ export function ExerciseDetailModal({
         await supabase.storage.from('gifs').remove(filesToDelete);
       }
       
-      // Then upload new file with timestamp name
       const { data, error } = await supabase.storage
         .from('gifs')
         .upload(filename, file, {
@@ -185,20 +220,16 @@ export function ExerciseDetailModal({
         throw new Error(error.message);
       }
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from('gifs')
         .getPublicUrl(filename);
 
-      // Add timestamp to bust browser cache
       const cachedUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
       setUploadProgress('Caricamento completato!');
       
-      // Save to database with timestamp filename
       await setGifUrl(exercise.id, cachedUrl);
       
-      // Notify parent with cache-busted URL
       if (onGifUpdated) {
         onGifUpdated(exercise.id, cachedUrl);
       }
@@ -218,7 +249,7 @@ export function ExerciseDetailModal({
   };
 
   const handleDeleteGif = async () => {
-    if (!gifUrl) return;
+    if (!gifUrl || !exercise.id) return;
 
     setIsDeleting(true);
     setUploadProgress('Eliminazione in corso...');
@@ -234,7 +265,6 @@ export function ExerciseDetailModal({
         throw new Error(error.message);
       }
 
-      // Remove from database
       await removeGifUrl(exercise.id);
 
       if (onGifUpdated) {
@@ -256,7 +286,6 @@ export function ExerciseDetailModal({
     }
   };
 
-  // Open Google Images search for this exercise
   const searchGif = () => {
     const query = encodeURIComponent(`${exercise.name} exercise gif`);
     const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
@@ -271,6 +300,76 @@ export function ExerciseDetailModal({
     fileInputRef.current?.click();
   };
 
+  // Edit/Create form content
+  const renderEditForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-zinc-400 mb-1">Nome</label>
+        <input
+          type="text"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+          placeholder="Nome esercizio"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-zinc-400 mb-1">Muscoli (separati da virgola)</label>
+        <input
+          type="text"
+          value={editMuscles}
+          onChange={(e) => setEditMuscles(e.target.value)}
+          className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+          placeholder="Chest, Shoulders, Triceps"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-1">Reps</label>
+          <input
+            type="number"
+            value={editReps}
+            onChange={(e) => setEditReps(e.target.value)}
+            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+            placeholder="12"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-1">Durata (secondi)</label>
+          <input
+            type="number"
+            value={editDuration}
+            onChange={(e) => setEditDuration(e.target.value)}
+            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+            placeholder="30"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-zinc-400 mb-1">Difficolta</label>
+        <select
+          value={editDifficulty}
+          onChange={(e) => setEditDifficulty(e.target.value)}
+          className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+        >
+          <option value="beginner">Principiante</option>
+          <option value="intermediate">Intermedio</option>
+          <option value="advanced">Avanzato</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-zinc-400 mb-1">Descrizione</label>
+        <textarea
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+          rows={4}
+          className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 resize-none"
+          placeholder="Descrizione dell'esercizio..."
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={onClose}>
       <div 
@@ -281,7 +380,9 @@ export function ExerciseDetailModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
           <div className="flex items-center gap-3">
             <Target className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-xl font-bold text-white">{exercise.name}</h2>
+            <h2 className="text-xl font-bold text-white">
+              {mode === 'create' ? 'Nuovo Esercizio' : mode === 'edit' ? 'Modifica Esercizio' : exercise.name}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -291,180 +392,193 @@ export function ExerciseDetailModal({
           </button>
         </div>
 
-        {/* Content - Two columns */}
-        <div className="flex flex-col md:flex-row h-[calc(85vh-80px)]">
-          {/* Left - GIF + Upload Area */}
-          <div className="md:w-1/2 bg-zinc-950 flex flex-col p-4">
-            {/* GIF Display */}
-            <div className="flex-1 flex items-center justify-center min-h-[200px]">
-              {gifUrl && !imageError ? (
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <img
-                    src={gifUrl}
-                    alt={`${exercise.name} animation`}
-                    className="max-w-full max-h-full object-contain rounded-lg"
-                    onError={() => setImageError(true)}
-                  />
-                  {/* Delete Button */}
-                  <button
-                    onClick={handleDeleteGif}
-                    disabled={isDeleting}
-                    className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
-                    title="Elimina GIF"
-                  >
-                    {isDeleting ? (
-                      <Loader2 className="w-4 h-4 text-white animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4 text-white" />
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-zinc-500">
-                  <Play className="w-16 h-16 mb-4 opacity-50" />
-                  <p>GIF non disponibile</p>
-                </div>
-              )}
+        {/* Content */}
+        {isEditable ? (
+          <div className="p-6 overflow-y-auto h-[calc(85vh-80px)]">
+            {renderEditForm()}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleSave}
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Salva
+              </button>
             </div>
+          </div>
+        ) : (
+          <div className="flex flex-col md:flex-row h-[calc(85vh-80px)]">
+            {/* Left - GIF + Upload Area */}
+            {showUpload && (
+              <div className="md:w-1/2 bg-zinc-950 flex flex-col p-4">
+                <div className="flex-1 flex items-center justify-center min-h-[200px]">
+                  {gifUrl && !imageError ? (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <img
+                        src={gifUrl}
+                        alt={`${exercise.name} animation`}
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        onError={() => setImageError(true)}
+                      />
+                      <button
+                        onClick={handleDeleteGif}
+                        disabled={isDeleting}
+                        className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
+                        title="Elimina GIF"
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="w-4 h-4 text-white animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-white" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-zinc-500">
+                      <Play className="w-16 h-16 mb-4 opacity-50" />
+                      <p>GIF non disponibile</p>
+                    </div>
+                  )}
+                </div>
 
-            {/* Upload Status */}
-            {uploadProgress && (
-              <div className="text-center py-2 text-sm text-emerald-400">
-                {uploadProgress}
+                {uploadProgress && (
+                  <div className="text-center py-2 text-sm text-emerald-400">
+                    {uploadProgress}
+                  </div>
+                )}
+
+                <div className="mt-4 space-y-3">
+                  <button
+                    onClick={searchGif}
+                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-4 h-4" />
+                    Cerca GIF su Google Immagini
+                  </button>
+
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                      isDragging
+                        ? 'border-emerald-400 bg-emerald-500/10'
+                        : 'border-zinc-700 hover:border-zinc-600 bg-zinc-900/50'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    
+                    {isUploading ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
+                        <p className="text-sm text-zinc-400">Caricamento...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                        <p className="text-sm text-zinc-400 mb-1">
+                          Trascina qui la GIF scaricata
+                        </p>
+                        <p className="text-xs text-zinc-600 mb-3">
+                          oppure
+                        </p>
+                        <button
+                          onClick={openFilePicker}
+                          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 mx-auto"
+                        >
+                          <Image className="w-4 h-4" />
+                          Sfoglia
+                        </button>
+                        <p className="text-xs text-zinc-600 mt-2">Formato: immagini (max 10MB)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Search & Upload Area */}
-            <div className="mt-4 space-y-3">
-              {/* Search GIF Button */}
-              <button
-                onClick={searchGif}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Search className="w-4 h-4" />
-                Cerca GIF su Google Immagini
-              </button>
-
-              {/* Drag & Drop Zone */}
-              <div
-                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                  isDragging
-                    ? 'border-emerald-400 bg-emerald-500/10'
-                    : 'border-zinc-700 hover:border-zinc-600 bg-zinc-900/50'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                
-                {isUploading ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
-                    <p className="text-sm text-zinc-400">Caricamento...</p>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                    <p className="text-sm text-zinc-400 mb-1">
-                      Trascina qui la GIF scaricata
-                    </p>
-                    <p className="text-xs text-zinc-600 mb-3">
-                      oppure
-                    </p>
-                    <button
-                      onClick={openFilePicker}
-                      className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                    >
-                      <Image className="w-4 h-4" />
-                      Sfoglia
-                    </button>
-                    <p className="text-xs text-zinc-600 mt-2">Formato: immagini (max 10MB)</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right - Description */}
-          <div className="md:w-1/2 p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${difficultyColor}`}>
-                  {difficultyLabel}
-                </span>
-                {exercise.reps && (
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
-                    <Zap className="w-4 h-4" />
-                    {exercise.reps} reps
-                  </span>
-                )}
-                {exercise.duration && (
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {exercise.duration}s
-                  </span>
-                )}
-              </div>
-
-              {/* Muscles */}
-              <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli coinvolti</h3>
+            {/* Right - Description */}
+            <div className={`${showUpload ? 'md:w-1/2' : 'w-full'} p-6 overflow-y-auto`}>
+              <div className="space-y-6">
+                {/* Tags */}
                 <div className="flex flex-wrap gap-2">
-                  {exercise.muscles.map((muscle) => (
-                    <span
-                      key={muscle}
-                      className="px-3 py-1 rounded-full text-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    >
-                      {muscle}
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${difficultyColor}`}>
+                    {difficultyLabel}
+                  </span>
+                  {exercise.reps && (
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
+                      <Zap className="w-4 h-4" />
+                      {exercise.reps} reps
                     </span>
-                  ))}
+                  )}
+                  {exercise.duration && (
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {exercise.duration}s
+                    </span>
+                  )}
                 </div>
-              </div>
 
-              {/* Description */}
-              <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                <p className="text-zinc-200 leading-relaxed">{getDescription(exercise.name)}</p>
-              </div>
+                {/* Muscles */}
+                <div>
+                  <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli coinvolti</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(exercise.muscles || []).map((muscle, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-full text-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      >
+                        {muscle}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Navigation */}
-              <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                <button
-                  onClick={onPrev}
-                  disabled={!hasPrev}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    hasPrev
-                      ? 'bg-zinc-800 hover:bg-zinc-700 text-white'
-                      : 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed'
-                  }`}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Precedente
-                </button>
-                <button
-                  onClick={onNext}
-                  disabled={!hasNext}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    hasNext
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                      : 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed'
-                  }`}
-                >
-                  Successivo
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                {/* Description */}
+                <div>
+                  <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
+                  <p className="text-zinc-200 leading-relaxed">{getDescription(exercise.name)}</p>
+                </div>
+
+                {/* Navigation */}
+                {onPrev && onNext && (
+                  <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                    <button
+                      onClick={onPrev}
+                      disabled={!hasPrev}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        hasPrev
+                          ? 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                          : 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed'
+                      }`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Precedente
+                    </button>
+                    <button
+                      onClick={onNext}
+                      disabled={!hasNext}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        hasNext
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                          : 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed'
+                      }`}
+                    >
+                      Successivo
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
