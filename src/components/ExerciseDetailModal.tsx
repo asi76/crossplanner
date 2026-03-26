@@ -312,9 +312,10 @@ export function ExerciseDetailModal({
     const query = encodeURIComponent(`${exercise.name} exercise gif`);
     const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
     const width = 600;
-    const height = 360;
+    const height = 400;
+    // Centered relative to viewport, 60px higher than center
     const left = Math.round((window.innerWidth - width) / 2);
-    const top = Math.round((window.innerHeight - height) / 2) - 80;
+    const top = Math.round((window.innerHeight - height) / 2) - 60;
     window.open(searchUrl, 'gifsearch', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
   };
 
