@@ -169,15 +169,23 @@ export function ExerciseDetailModal({
         throw new Error(error.message);
       }
 
-      // Get public URL
+      // Get public URL with cache busting
       const { data: urlData } = supabase.storage
         .from('gifs')
         .getPublicUrl(filename);
 
+      // Add timestamp to bust browser cache
+      const cachedUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
       setUploadProgress('Caricamento completato!');
       
-      // Save to localStorage
-      setGifUrl(exercise.id, urlData.publicUrl);
+      // Save to database
+      await setGifUrl(exercise.id, urlData.publicUrl);
+      
+      // Notify parent with cache-busted URL
+      if (onGifUpdated) {
+        onGifUpdated(exercise.id, cachedUrl);
+      }
       
       if (onGifUpdated) {
         onGifUpdated(exercise.id, urlData.publicUrl);
@@ -214,8 +222,8 @@ export function ExerciseDetailModal({
         throw new Error(error.message);
       }
 
-      // Remove from localStorage
-      removeGifUrl(exercise.id);
+      // Remove from database
+      await removeGifUrl(exercise.id);
 
       if (onGifUpdated) {
         onGifUpdated(exercise.id, null);
