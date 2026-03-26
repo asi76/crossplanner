@@ -256,12 +256,19 @@ export function ExerciseDetailModal({
     }
   };
 
-  // Open Google Images search for this exercise - small popup covering GIF area only
+  // Open Google Images search for this exercise - 600x400 positioned at bottom-left of drag-drop area
   const searchGif = () => {
     const query = encodeURIComponent(`${exercise.name} exercise gif`);
     const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
-    // Small popup positioned at top, covering only GIF area (320px wide + 40px padding = 360px)
-    window.open(searchUrl, 'gifsearch', 'width=400,height=600,top=50,left=100,scrollbars=yes,resizable=yes');
+    // 600x400, bottom-left aligned to where drag-drop area starts (approximate)
+    const width = 600;
+    const height = 400;
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    // Position at left side, slightly up from bottom
+    const left = Math.round((screenWidth - width) / 4);
+    const top = Math.round(screenHeight - height - 150);
+    window.open(searchUrl, 'gifsearch', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
   };
 
   const openFilePicker = () => {
