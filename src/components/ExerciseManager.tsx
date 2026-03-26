@@ -185,7 +185,7 @@ export function ExerciseManager() {
           </button>
           <button
             onClick={() => setIsCreating(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
             + Esercizio
           </button>
@@ -201,12 +201,12 @@ export function ExerciseManager() {
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               placeholder="Nome del nuovo gruppo..."
-              className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+              className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
               autoFocus
             />
             <button
               onClick={handleSaveNewGroup}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
             >
               Salva
             </button>
@@ -248,7 +248,7 @@ export function ExerciseManager() {
                   className="p-1.5 hover:bg-zinc-700 rounded transition-colors"
                   title="Aggiungi esercizio"
                 >
-                  <Plus className="w-4 h-4 text-emerald-400" />
+                  <Plus className="w-4 h-4 text-blue-500" />
                 </button>
                 <button
                   onClick={() => handleDeleteGroup(group.id)}

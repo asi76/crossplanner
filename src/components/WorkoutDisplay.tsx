@@ -225,7 +225,7 @@ export const WorkoutDisplay = ({ workout, onComplete, onExit }: WorkoutDisplayPr
           <p className="text-gray-400 mb-8">Great job finishing {workout.name}</p>
           <button
             onClick={onComplete}
-            className="px-8 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+            className="px-8 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
           >
             Back to Home
           </button>
@@ -264,7 +264,7 @@ export const WorkoutDisplay = ({ workout, onComplete, onExit }: WorkoutDisplayPr
               onClick={() => goToStation(idx)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 timer.stationIndex === idx
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : idx < timer.stationIndex
                   ? 'bg-green-500/50 text-white'
                   : 'bg-dark-card text-gray-400'
@@ -282,7 +282,7 @@ export const WorkoutDisplay = ({ workout, onComplete, onExit }: WorkoutDisplayPr
           className="bg-dark-card border border-dark-border rounded-2xl p-6 mb-6"
         >
           <div className="text-center mb-6">
-            <p className="text-emerald-400 text-sm font-medium mb-1">{station?.name}</p>
+            <p className="text-blue-500 text-sm font-medium mb-1">{station?.name}</p>
             <h2 className="text-2xl font-bold text-white mb-2">{exerciseData?.name}</h2>
             <p className="text-gray-400 text-sm">{exerciseData?.description}</p>
           </div>
@@ -329,7 +329,7 @@ export const WorkoutDisplay = ({ workout, onComplete, onExit }: WorkoutDisplayPr
             </button>
             <button
               onClick={togglePause}
-              className="p-6 bg-emerald-500 rounded-full hover:bg-emerald-600 transition-colors"
+              className="p-6 bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
             >
               {timer.isRunning ? (
                 <Pause className="w-8 h-8 text-white" />
@@ -361,7 +361,7 @@ export const WorkoutDisplay = ({ workout, onComplete, onExit }: WorkoutDisplayPr
         {!timer.isRunning && timer.seconds === 0 && (
           <button
             onClick={startWorkout}
-            className="w-full py-4 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+            className="w-full py-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
           >
             Start
           </button>

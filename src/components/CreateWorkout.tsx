@@ -175,7 +175,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
         value={workoutName}
         onChange={(e) => setWorkoutName(e.target.value)}
         placeholder="Nome del workout..."
-        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
       />
 
       {/* Stations Tabs */}
@@ -186,7 +186,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
               onClick={() => setSelectedStationIndex(index)}
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedStationIndex === index
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
               }`}
             >
@@ -227,7 +227,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                   }}
                   className="flex items-center gap-3 flex-1 text-left"
                 >
-                  <Dumbbell className="w-5 h-5 text-emerald-400" />
+                  <Dumbbell className="w-5 h-5 text-blue-500" />
                   <span className="text-white font-medium">{ex.exerciseName || ex.exerciseId}</span>
                 </button>
                 <div className="flex items-center gap-4">
@@ -250,7 +250,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
       {/* Save Button */}
       <button
         onClick={handleSave}
-        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-colors"
+        className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors"
       >
         Salva Workout
       </button>
@@ -300,7 +300,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                             onClick={() => handleOpenExercise(exercise)}
                             className="flex-1 text-left"
                           >
-                            <span className="text-emerald-400 font-medium">{exercise.name}</span>
+                            <span className="text-blue-500 font-medium">{exercise.name}</span>
                             <div className="flex gap-2 mt-1">
                               {exercise.muscles?.map((muscle: string, idx: number) => (
                                 <span key={idx} className="text-xs text-zinc-500">{muscle}</span>
@@ -309,7 +309,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                           </button>
                           <button
                             onClick={() => handleAddExercise(exercise)}
-                            className="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors ml-2"
+                            className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors ml-2"
                           >
                             <Plus className="w-5 h-5 text-white" />
                           </button>

@@ -117,8 +117,8 @@ export const AdminPanel = () => {
         className="max-w-4xl mx-auto"
       >
         <div className="flex items-center gap-3 mb-8">
-          <div className="bg-emerald-500/20 p-3 rounded-lg">
-            <Shield className="w-8 h-8 text-emerald-400" />
+          <div className="bg-blue-500/20 p-3 rounded-lg">
+            <Shield className="w-8 h-8 text-blue-500" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
@@ -132,7 +132,7 @@ export const AdminPanel = () => {
               onClick={() => setActiveTab('requests')}
               className={`flex-1 px-6 py-4 flex items-center justify-center gap-2 font-medium transition-colors ${
                 activeTab === 'requests'
-                  ? 'bg-dark-hover text-white border-b-2 border-emerald-500'
+                  ? 'bg-dark-hover text-white border-b-2 border-blue-500'
                   : 'text-gray-400 hover:text-white hover:bg-dark-hover'
               }`}
             >
@@ -148,7 +148,7 @@ export const AdminPanel = () => {
               onClick={() => setActiveTab('users')}
               className={`flex-1 px-6 py-4 flex items-center justify-center gap-2 font-medium transition-colors ${
                 activeTab === 'users'
-                  ? 'bg-dark-hover text-white border-b-2 border-emerald-500'
+                  ? 'bg-dark-hover text-white border-b-2 border-blue-500'
                   : 'text-gray-400 hover:text-white hover:bg-dark-hover'
               }`}
             >
@@ -163,7 +163,7 @@ export const AdminPanel = () => {
           <div className="p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             ) : activeTab === 'requests' ? (
               pendingUsers.length === 0 ? (
@@ -188,7 +188,7 @@ export const AdminPanel = () => {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4">
-                          <div className="bg-gradient-to-br from-emerald-500 to-purple-500 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="bg-gradient-to-br from-blue-500 to-purple-500 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {user.name?.charAt(0).toUpperCase() || user.id.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
@@ -259,7 +259,7 @@ export const AdminPanel = () => {
                     className="bg-dark-hover border border-dark-border rounded-lg p-4 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="bg-emerald-600 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
                         {user.name?.charAt(0).toUpperCase() || user.id.charAt(0).toUpperCase()}
                       </div>
                       <div>

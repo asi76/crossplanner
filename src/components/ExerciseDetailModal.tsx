@@ -332,7 +332,7 @@ export function ExerciseDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
           <div className="flex items-center gap-3">
-            <Target className="w-5 h-5 text-emerald-400" />
+            <Target className="w-5 h-5 text-blue-500" />
             <h2 className="text-xl font-bold text-white">
               {isEditing ? (propMode === 'create' ? 'Nuovo Esercizio' : 'Modifica Esercizio') : exercise.name}
             </h2>
@@ -348,7 +348,7 @@ export function ExerciseDetailModal({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+                  className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
                 >
                   <Save className="w-3 h-3" />
                   Salva
@@ -402,7 +402,7 @@ export function ExerciseDetailModal({
 
             {/* Upload Status */}
             {uploadProgress && (
-              <div className="text-center py-2 text-sm text-emerald-400">
+              <div className="text-center py-2 text-sm text-blue-500">
                 {uploadProgress}
               </div>
             )}
@@ -412,7 +412,7 @@ export function ExerciseDetailModal({
               {/* Search GIF Button */}
               <button
                 onClick={searchGif}
-                className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <Search className="w-4 h-4" />
                 Cerca GIF su Google Immagini
@@ -422,7 +422,7 @@ export function ExerciseDetailModal({
               <div
                 className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
                   isDragging
-                    ? 'border-emerald-400 bg-emerald-500/10'
+                    ? 'border-emerald-400 bg-blue-500/10'
                     : 'border-zinc-700 hover:border-zinc-600 bg-zinc-900/50'
                 }`}
                 onDragOver={handleDragOver}
@@ -439,12 +439,12 @@ export function ExerciseDetailModal({
                 
                 {isUploading ? (
                   <div className="flex flex-col items-center">
-                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-2" />
                     <p className="text-sm text-zinc-400">Caricamento...</p>
                   </div>
                 ) : (
                   <>
-                    <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                    <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-blue-500' : 'text-zinc-500'}`} />
                     <p className="text-sm text-zinc-400 mb-1">
                       Trascina qui la GIF scaricata
                     </p>
@@ -476,7 +476,7 @@ export function ExerciseDetailModal({
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                     placeholder="Nome esercizio"
                   />
                 </div>
@@ -486,7 +486,7 @@ export function ExerciseDetailModal({
                     type="text"
                     value={editMuscles}
                     onChange={(e) => setEditMuscles(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                     placeholder="Chest, Shoulders"
                   />
                 </div>
@@ -497,7 +497,7 @@ export function ExerciseDetailModal({
                       type="number"
                       value={editReps}
                       onChange={(e) => setEditReps(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                       placeholder="12"
                     />
                   </div>
@@ -507,7 +507,7 @@ export function ExerciseDetailModal({
                       type="number"
                       value={editDuration}
                       onChange={(e) => setEditDuration(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                       placeholder="30"
                     />
                   </div>
@@ -518,7 +518,7 @@ export function ExerciseDetailModal({
                     <select
                       value={editDifficulty}
                       onChange={(e) => setEditDifficulty(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                     >
                       <option value="beginner">Principiante</option>
                       <option value="intermediate">Intermedio</option>
@@ -530,7 +530,7 @@ export function ExerciseDetailModal({
                     <select
                       value={editTipo}
                       onChange={(e) => setEditTipo(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
                     >
                       <option value="anaerobico">Anaerobico</option>
                       <option value="aerobico">Aerobico</option>
@@ -543,7 +543,7 @@ export function ExerciseDetailModal({
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 resize-none text-sm"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 resize-none text-sm"
                     placeholder="Descrizione..."
                   />
                 </div>
@@ -558,7 +558,7 @@ export function ExerciseDetailModal({
                   </span>
                   <span className={`px-3 py-1.5 rounded-full text-base font-medium border ${
                     exercise.tipo === 'aerobico' 
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                      ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' 
                       : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                   }`}>
                     {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
@@ -584,7 +584,7 @@ export function ExerciseDetailModal({
                     {exercise.muscles?.map((muscle) => (
                       <span
                         key={muscle}
-                        className="px-3 py-1 rounded-full text-base bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        className="px-3 py-1 rounded-full text-base bg-blue-500/10 text-blue-500 border border-blue-500/20"
                       >
                         {muscle}
                       </span>
@@ -618,7 +618,7 @@ export function ExerciseDetailModal({
                         setIsEditing(true);
                         if (onEdit) onEdit();
                       }}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-base transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-base transition-colors"
                     >
                       <Edit3 className="w-5 h-5" />
                       Modifica

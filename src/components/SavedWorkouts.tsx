@@ -135,7 +135,7 @@ export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onLoadWorkout(workout)}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                   >
                     <Play className="w-4 h-4" />
                     Avvia

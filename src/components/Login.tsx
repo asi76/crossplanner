@@ -64,7 +64,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
               transition={{ delay: 0.2, type: 'spring' }}
               className="bg-primary/20 p-4 rounded-full mb-4"
             >
-              <Dumbbell className="w-12 h-12 text-emerald-400" />
+              <Dumbbell className="w-12 h-12 text-blue-500" />
             </motion.div>
             <h1 className="text-2xl font-bold text-white mb-2">Crosstraining</h1>
             <p className="text-gray-400 text-center">Sign in to access your workouts</p>
@@ -143,7 +143,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-emerald-400" />
+                  <User className="w-5 h-5 text-blue-500" />
                   Request Access
                 </h2>
                 <button
@@ -165,7 +165,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
                   value={requestEmail}
                   onChange={(e) => setRequestEmail(e.target.value)}
                   placeholder="your.email@gmail.com"
-                  className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
                 value={requestMessage}
                 onChange={(e) => setRequestMessage(e.target.value)}
                 placeholder="Hi, I would like to request access to the Crosstraining app because..."
-                className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 resize-none h-32 mb-4 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 resize-none h-32 mb-4 focus:outline-none focus:border-blue-500"
               />
 
               <div className="flex gap-3">
@@ -186,7 +186,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
                 <button
                   onClick={handleSubmitRequest}
                   disabled={!requestEmail.trim() || !requestMessage.trim() || loading}
-                  className="flex-1 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

@@ -98,7 +98,7 @@ export function ExerciseEditor({
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value as MuscleGroup)}
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
             >
               {groups.map(group => (
                 <option key={group.id} value={group.id}>{group.label}</option>
@@ -114,7 +114,7 @@ export function ExerciseEditor({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="es. Push-Ups"
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -126,7 +126,7 @@ export function ExerciseEditor({
               value={muscles}
               onChange={(e) => setMuscles(e.target.value)}
               placeholder="es. petto, spalle, tricipiti"
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -139,7 +139,7 @@ export function ExerciseEditor({
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
                 placeholder="es. 10"
-                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
@@ -149,7 +149,7 @@ export function ExerciseEditor({
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="es. 30"
-                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ export function ExerciseEditor({
           )}
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-4 h-4" />
             Salva
