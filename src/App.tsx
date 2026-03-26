@@ -452,14 +452,6 @@ function App() {
               </div>
               <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
                 <div className="space-y-4">
-                  {/* Ripetizioni */}
-                  <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-1.5">Ripetizioni</h3>
-                    <p className="text-white text-lg font-semibold">
-                      {viewingExercise.sets} x {viewingExercise.reps}
-                      {viewingExercise.rest && ` - ${viewingExercise.rest}s pausa`}
-                    </p>
-                  </div>
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-1.5">Descrizione</h3>
                     <p className="text-zinc-300 text-base leading-relaxed">
