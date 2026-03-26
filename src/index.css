@@ -8,17 +8,30 @@ body {
   min-height: 100vh;
 }
 
-/* Dark scrollbar for groups */
-.scrollbar-dark::-webkit-scrollbar {
+/* Dark scrollbar for groups and all overflow areas */
+::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
-.scrollbar-dark::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: #27272a;
 }
-.scrollbar-dark::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: #3f3f46;
   border-radius: 3px;
 }
-.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: #52525b;
+}
+
+/* Modal edit form - smaller elements */
+.modal-edit-form input,
+.modal-edit-form select,
+.modal-edit-form textarea {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+.modal-edit-form label {
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
 }

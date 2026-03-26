@@ -449,81 +449,83 @@ export function ExerciseDetailModal({
           {/* Right - Description / Edit Form */}
           <div className="md:w-1/2 p-6 overflow-y-auto">
             {isEditing ? (
-              /* Edit/Create Form */
-              <div className="space-y-4">
+              /* Edit/Create Form - compact version */
+              <div className="modal-edit-form space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Nome</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Nome</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
                     placeholder="Nome esercizio"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Muscoli (separati da virgola)</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Muscoli</label>
                   <input
                     type="text"
                     value={editMuscles}
                     onChange={(e) => setEditMuscles(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                    placeholder="Chest, Shoulders, Triceps"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                    placeholder="Chest, Shoulders"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Reps</label>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Reps</label>
                     <input
                       type="number"
                       value={editReps}
                       onChange={(e) => setEditReps(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
                       placeholder="12"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Durata (secondi)</label>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Durata (s)</label>
                     <input
                       type="number"
                       value={editDuration}
                       onChange={(e) => setEditDuration(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
                       placeholder="30"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Difficolta</label>
-                  <select
-                    value={editDifficulty}
-                    onChange={(e) => setEditDifficulty(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="beginner">Principiante</option>
-                    <option value="intermediate">Intermedio</option>
-                    <option value="advanced">Avanzato</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Difficolta</label>
+                    <select
+                      value={editDifficulty}
+                      onChange={(e) => setEditDifficulty(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                    >
+                      <option value="beginner">Principiante</option>
+                      <option value="intermediate">Intermedio</option>
+                      <option value="advanced">Avanzato</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Tipo</label>
+                    <select
+                      value={editTipo}
+                      onChange={(e) => setEditTipo(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm"
+                    >
+                      <option value="anaerobico">Anaerobico</option>
+                      <option value="aerobico">Aerobico</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Tipo</label>
-                  <select
-                    value={editTipo}
-                    onChange={(e) => setEditTipo(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="anaerobico">Anaerobico</option>
-                    <option value="aerobico">Aerobico</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Descrizione</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Descrizione</label>
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 resize-none"
-                    placeholder="Descrizione dell'esercizio..."
+                    rows={3}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 resize-none text-sm"
+                    placeholder="Descrizione..."
                   />
                 </div>
                 <div className="flex gap-3 pt-4">
