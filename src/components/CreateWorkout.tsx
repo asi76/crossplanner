@@ -377,6 +377,14 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
               {/* Right - Info */}
               <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
                 <div className="space-y-4">
+                  {/* Descrizione */}
+                  <div>
+                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Descrizione</h3>
+                    <p className="text-zinc-300 text-xs leading-relaxed">
+                      {viewingExercise.description || 'Nessuna descrizione disponibile.'}
+                    </p>
+                  </div>
+
                   {/* Muscoli */}
                   <div>
                     <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Muscoli</h3>
@@ -411,14 +419,6 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                         {viewingExercise.reps ? `${viewingExercise.reps} reps` : `${viewingExercise.duration}s`}
                       </span>
                     )}
-                  </div>
-
-                  {/* Descrizione */}
-                  <div>
-                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Descrizione</h3>
-                    <p className="text-zinc-300 text-xs leading-relaxed">
-                      {viewingExercise.description || 'Nessuna descrizione disponibile.'}
-                    </p>
                   </div>
                 </div>
               </div>
