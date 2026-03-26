@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, X, Dumbbell, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, X, Dumbbell, Trash2 } from 'lucide-react';
 import { exercises, muscleGroupLabels, muscleGroupColors, getExercisesByMuscleGroup } from '../data/exercises';
 import { MuscleGroup, Workout, Station, WorkoutExercise } from '../data/types';
 import { supabase } from '../supabase';
@@ -16,21 +16,10 @@ export function CreateWorkout({ onSave }: CreateWorkoutProps) {
     { id: '1', name: 'Station 1', exercises: [] }
   ]);
   const [selectedStationIndex, setSelectedStationIndex] = useState(0);
-  const [expandedGroups, setExpandedGroups] = useState<Set<MuscleGroup>>(new Set(muscleGroups));
+  // All groups expanded by default
+  const [expandedGroups] = useState<Set<MuscleGroup>>(new Set(muscleGroups));
 
   const currentStation = stations[selectedStationIndex];
-
-  const toggleGroup = (group: MuscleGroup) => {
-    setExpandedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(group)) {
-        next.delete(group);
-      } else {
-        next.add(group);
-      }
-      return next;
-    });
-  };
 
   const handleAddStation = () => {
     const newStation: Station = {
@@ -73,7 +62,7 @@ export function CreateWorkout({ onSave }: CreateWorkoutProps) {
     setStations(newStations);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!workoutName.trim() || stations.every(s => s.exercises.length === 0)) {
       alert('Inserisci un nome e aggiungi almeno un esercizio');
       return;
@@ -85,6 +74,24 @@ export function CreateWorkout({ onSave }: CreateWorkoutProps) {
       stations: stations.filter(s => s.exercises.length > 0),
       createdAt: new Date()
     };
+
+    // Save to Supabase for cross-browser persistence
+    try {
+      const { error } = await supabase
+        .from('workouts')
+        .insert({
+          id: workout.id,
+          name: workout.name,
+          stations: workout.stations,
+          created_at: workout.createdAt.toISOString()
+        });
+      
+      if (error) {
+        console.error('Error saving workout:', error);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    }
 
     onSave(workout);
     setWorkoutName('');
@@ -190,19 +197,11 @@ export function CreateWorkout({ onSave }: CreateWorkoutProps) {
           {muscleGroups.map(group => (
             <div key={group} className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
               {/* Group Header */}
-              <button
-                onClick={() => toggleGroup(group)}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
-              >
+              <div className="px-4 py-3 bg-zinc-800/30">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium border ${muscleGroupColors[group]}`}>
                   {muscleGroupLabels[group]}
                 </span>
-                {expandedGroups.has(group) ? (
-                  <ChevronUp className="w-4 h-4 text-zinc-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                )}
-              </button>
+              </div>
 
               {/* Exercises List */}
               {expandedGroups.has(group) && (

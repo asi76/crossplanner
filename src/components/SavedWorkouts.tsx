@@ -1,117 +1,157 @@
-import { motion } from 'framer-motion';
-import { 
-  Trash2, 
-  Play, 
-  Clock,
-  Dumbbell,
-  ChevronLeft
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Dumbbell, Clock, Play, Trash2, LogOut } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/auth';
 import { Workout } from '../data/types';
+import { supabase } from '../supabase';
 
 interface SavedWorkoutsProps {
-  workouts: Workout[];
-  onLoad: (workout: Workout) => void;
-  onDelete: (id: string) => void;
-  onBack: () => void;
+  onLoadWorkout: (workout: Workout) => void;
 }
 
-export const SavedWorkouts = ({ workouts, onLoad, onDelete, onBack }: SavedWorkoutsProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
+export function SavedWorkouts({ onLoadWorkout }: SavedWorkoutsProps) {
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadWorkouts();
+  }, []);
+
+  async function loadWorkouts() {
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error loading workouts:', error);
+        setLoading(false);
+        return;
+      }
+      
+      if (data) {
+        const loadedWorkouts: Workout[] = data.map(w => ({
+          id: w.id,
+          name: w.name,
+          stations: w.stations || [],
+          createdAt: new Date(w.created_at)
+        }));
+        setWorkouts(loadedWorkouts);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    }
+    
+    setLoading(false);
+  }
+
+  const getTotalExercises = (workout: Workout) => {
+    return workout.stations.reduce((sum, station) => sum + station.exercises.length, 0);
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('it-IT', {
       day: 'numeric',
+      month: 'short',
       year: 'numeric'
     });
   };
 
-  const getTotalExercises = (workout: Workout) => {
-    return workout.stations.reduce((acc, s) => acc + s.exercises.length, 0);
+  const handleDelete = async (workoutId: string) => {
+    if (!confirm('Eliminare questo workout?')) return;
+    
+    try {
+      await supabase.from('workouts').delete().eq('id', workoutId);
+      setWorkouts(workouts.filter(w => w.id !== workoutId));
+    } catch (err) {
+      console.error('Error deleting:', err);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-dark-bg">
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="flex items-center gap-4 mb-6">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-dark-hover rounded-lg"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-400" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Saved Workouts</h1>
-        </div>
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
-        {workouts.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <div className="bg-dark-card p-6 rounded-2xl inline-block mb-4">
-              <Dumbbell className="w-12 h-12 text-gray-600 mx-auto" />
-            </div>
-            <p className="text-gray-400 mb-2">No saved workouts yet</p>
-            <p className="text-gray-500 text-sm">Create a workout and save it to see it here</p>
-          </motion.div>
-        ) : (
-          <div className="grid gap-4">
-            {workouts.map((workout, idx) => (
-              <motion.div
-                key={workout.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-blue-500/50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-white font-semibold text-xl mb-2">{workout.name}</h3>
-                    <div className="flex items-center gap-4 text-gray-400 text-base">
-                      <span className="flex items-center gap-1">
-                        <Dumbbell className="w-4 h-4" />
-                        {getTotalExercises(workout)} exercises
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {workout.stations.length} stations
-                      </span>
-                      <span>{formatDate(workout.createdAt)}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {workout.stations.filter(s => s.exercises.length > 0).map(station => (
-                        <span key={station.id} className="px-2 py-1 bg-dark-hover rounded text-sm text-gray-400">
-                          {station.name.replace('Station ', '')} ({station.exercises.length})
-                        </span>
-                      ))}
-                    </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-zinc-400">Caricamento...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Miei Workout</h2>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded-lg transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
+      </div>
+
+      {workouts.length === 0 ? (
+        <div className="text-center py-12 text-zinc-500">
+          <Dumbbell className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p>Nessun workout salvato</p>
+          <p className="text-sm mt-2">Crea il tuo primo workout!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {workouts.map(workout => (
+            <div
+              key={workout.id}
+              className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold text-lg mb-2">{workout.name}</h3>
+                  <div className="flex items-center gap-4 text-zinc-400 text-sm">
+                    <span className="flex items-center gap-1">
+                      <Dumbbell className="w-4 h-4" />
+                      {getTotalExercises(workout)} exercises
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {workout.stations.length} stations
+                    </span>
+                    <span>{formatDate(workout.createdAt)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onLoad(workout)}
-                      className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                      title="Start Workout"
-                    >
-                      <Play className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Delete this workout?')) {
-                          onDelete(workout.id);
-                        }
-                      }}
-                      className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-lg transition-colors"
-                      title="Delete Workout"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {workout.stations.filter(s => s.exercises.length > 0).map(station => (
+                      <span key={station.id} className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-400">
+                        {station.name.replace('Station ', '')} ({station.exercises.length})
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onLoadWorkout(workout)}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                  >
+                    <Play className="w-4 h-4" />
+                    Avvia
+                  </button>
+                  <button
+                    onClick={() => handleDelete(workout.id)}
+                    className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-};
+}
