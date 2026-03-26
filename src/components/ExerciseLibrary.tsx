@@ -76,6 +76,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // Available colors for groups
   const groupColors = [
+    { id: 'white', name: 'Bianco', class: 'bg-white/20 text-white border-white/30' },
     { id: 'blue', name: 'Blu', class: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
     { id: 'cyan', name: 'Cyan', class: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
     { id: 'green', name: 'Verde', class: 'bg-green-500/20 text-green-400 border-green-500/30' },
