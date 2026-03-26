@@ -227,7 +227,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                   }}
                   className="flex items-center gap-3 flex-1 text-left"
                 >
-                  <Dumbbell className="w-5 h-5 text-blue-500" />
+                  <Dumbbell className="w-5 h-5 text-white" />
                   <span className="text-white font-medium">{ex.exerciseName || ex.exerciseId}</span>
                 </button>
                 <div className="flex items-center gap-4">
@@ -300,7 +300,7 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
                             onClick={() => handleOpenExercise(exercise)}
                             className="flex-1 text-left"
                           >
-                            <span className="text-blue-500 font-medium">{exercise.name}</span>
+                            <span className="text-white font-medium">{exercise.name}</span>
                             <div className="flex gap-2 mt-1">
                               {exercise.muscles?.map((muscle: string, idx: number) => (
                                 <span key={idx} className="text-xs text-zinc-500">{muscle}</span>

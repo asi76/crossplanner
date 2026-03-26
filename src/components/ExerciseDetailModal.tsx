@@ -422,7 +422,7 @@ export function ExerciseDetailModal({
               <div
                 className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
                   isDragging
-                    ? 'border-emerald-400 bg-blue-500/10'
+                    ? 'border-blue-400 bg-blue-500/10'
                     : 'border-zinc-700 hover:border-zinc-600 bg-zinc-900/50'
                 }`}
                 onDragOver={handleDragOver}

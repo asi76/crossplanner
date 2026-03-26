@@ -77,12 +77,18 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   // Available colors for groups
   const groupColors = [
     { id: 'blue', name: 'Blu', class: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+    { id: 'cyan', name: 'Cyan', class: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
     { id: 'green', name: 'Verde', class: 'bg-green-500/20 text-green-400 border-green-500/30' },
+    { id: 'lime', name: 'Lime', class: 'bg-lime-500/20 text-lime-400 border-lime-500/30' },
     { id: 'purple', name: 'Viola', class: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+    { id: 'pink', name: 'Rosa', class: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
     { id: 'orange', name: 'Arancione', class: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
     { id: 'red', name: 'Rosso', class: 'bg-red-500/20 text-red-400 border-red-500/30' },
     { id: 'yellow', name: 'Giallo', class: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
     { id: 'gray', name: 'Grigio', class: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+    { id: 'neon-green', name: 'Neon Verde', class: 'bg-green-400/30 text-green-300 border-green-400/50' },
+    { id: 'neon-blue', name: 'Neon Azzurro', class: 'bg-blue-400/30 text-blue-300 border-blue-400/50' },
+    { id: 'neon-pink', name: 'Neon Rosa', class: 'bg-pink-400/30 text-pink-300 border-pink-400/50' },
   ];
 
   // Get color class by id
@@ -525,7 +531,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
                         <div className="flex-1">
                           <button
                             onClick={() => handleViewExercise(exercise)}
-                            className="text-lg font-semibold text-blue-500 hover:text-blue-400 hover:underline cursor-pointer transition-colors"
+                            className="text-lg font-semibold text-white hover:text-blue-400 hover:underline cursor-pointer transition-colors"
                           >
                             {exercise.name}
                           </button>
@@ -577,7 +583,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
                 <div className="px-5 py-3 border-t border-zinc-800/50">
                   <button
                     onClick={() => handleAddExercise(group.id)}
-                    className="flex items-center gap-2 text-blue-500 hover:text-blue-400 transition-colors"
+                    className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Aggiungi esercizio
@@ -592,7 +598,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
       {/* Add Group Button */}
       <button
         onClick={() => setShowAddGroup(true)}
-        className="w-full px-6 py-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-blue-500 font-medium flex items-center justify-center gap-2 transition-colors"
+        className="w-full px-6 py-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-colors"
       >
         <Plus className="w-5 h-5" />
         Aggiungi Gruppo
