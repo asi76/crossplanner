@@ -331,7 +331,6 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
           gifUrl={selectedExerciseGif}
           onClose={() => setSelectedExercise(null)}
           onSave={async (data) => {
-            console.log('Saving exercise:', selectedExercise.id, data);
             const { error } = await supabase
               .from('exercises')
               .update({
@@ -346,11 +345,20 @@ export function CreateWorkout({ onBack, onSave }: CreateWorkoutProps) {
               .eq('id', selectedExercise.id);
             
             if (error) {
-              console.error('Save error:', error);
               alert('Errore: ' + error.message);
             } else {
-              console.log('Saved successfully');
-              setSelectedExercise(null);
+              // Reload exercise data and update selectedExercise with new data
+              const { data: updated } = await supabase
+                .from('exercises')
+                .select('*')
+                .eq('id', selectedExercise.id)
+                .single();
+              
+              if (updated) {
+                setSelectedExercise(updated);
+                // Also update in exercises list
+                setExercises(prev => prev.map(e => e.id === updated.id ? updated : e));
+              }
             }
           }}
           onGifUpdated={handleGifUpdated}
