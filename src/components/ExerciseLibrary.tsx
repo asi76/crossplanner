@@ -460,7 +460,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
       {/* Groups List */}
       <div className="space-y-3">
         {groups.map(group => (
-          <div key={group.id} className="bg-zinc-900 rounded-xl border border-zinc-800">
+          <div key={group.id} className="glass-card rounded-xl border border-zinc-700/30">
             {/* Group Header */}
             <button
               onClick={() => toggleGroup(group.id)}

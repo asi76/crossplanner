@@ -271,9 +271,9 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`bg-dark-card border rounded-xl overflow-hidden transition-colors ${
+                className={`glass-card rounded-xl overflow-hidden transition-all ${
                   expandedWorkoutId === workout.id 
-                    ? 'border-blue-500 w-full' 
+                    ? 'border-blue-500/50 w-full' 
                     : 'border-dark-border hover:border-blue-500/50'
                 }`}
               >
@@ -345,7 +345,7 @@ function App() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="border-t border-dark-border"
+                      className="border-t border-dark-border/50"
                     >
                       {/* Category Tabs - same style as CreateWorkout */}
                       <div className="flex gap-2 p-4 border-b border-dark-border">
@@ -414,29 +414,29 @@ function App() {
       {/* Exercise Info Modal - same style as CreateWorkout */}
       {viewingExercise && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
           onClick={() => setViewingExercise(null)}
         >
           <div 
-            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
+            className="bg-zinc-900/80 backdrop-blur-md rounded-2xl border border-zinc-700/50 w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-700/50">
               <div className="flex items-center gap-3">
-                <Target className="w-5 h-5 text-blue-500" />
-                <h2 className="text-xl font-bold text-white">
+                <Target className="w-5 h-5 text-blue-400" />
+                <h2 className="text-2xl font-bold text-white">
                   {viewingExercise.exerciseName || viewingExercise.exerciseId}
                 </h2>
               </div>
               <button
                 onClick={() => setViewingExercise(null)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                className="p-2 hover:bg-zinc-700/50 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-5 h-5 text-zinc-300" />
               </button>
             </div>
             <div className="flex flex-col md:flex-row max-h-[calc(80vh-70px)]">
-              <div className="md:w-1/2 bg-zinc-950 flex items-center justify-center p-4 min-h-[200px]">
+              <div className="md:w-1/2 bg-zinc-950/50 flex items-center justify-center p-4 min-h-[200px]">
                 {viewingExerciseGif ? (
                   <img 
                     src={viewingExerciseGif} 
@@ -452,31 +452,39 @@ function App() {
               </div>
               <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
                 <div className="space-y-4">
+                  {/* Ripetizioni */}
                   <div>
-                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Descrizione</h3>
-                    <p className="text-zinc-300 text-sm leading-relaxed">
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1.5">Ripetizioni</h3>
+                    <p className="text-white text-lg font-semibold">
+                      {viewingExercise.sets} x {viewingExercise.reps}
+                      {viewingExercise.rest && ` - ${viewingExercise.rest}s pausa`}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1.5">Descrizione</h3>
+                    <p className="text-zinc-300 text-base leading-relaxed">
                       {viewingExerciseData?.description || 'Nessuna descrizione disponibile.'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-xs font-medium text-zinc-500 mb-1.5">Muscoli</h3>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1.5">Muscoli</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {viewingExerciseData?.muscles?.map((muscle: string, idx: number) => (
-                        <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white border border-white/30">
+                        <span key={idx} className="px-2 py-0.5 rounded text-sm bg-white/20 text-white border border-white/30">
                           {muscle}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-sm px-2 py-0.5 rounded ${
                       viewingExerciseData?.tipo === 'aerobico' 
                         ? 'bg-blue-500/20 text-blue-400' 
                         : 'bg-orange-500/20 text-orange-400'
                     }`}>
                       {viewingExerciseData?.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-sm px-2 py-0.5 rounded ${
                       viewingExerciseData?.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
                       viewingExerciseData?.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-red-500/20 text-red-400'
@@ -484,11 +492,6 @@ function App() {
                       {viewingExerciseData?.difficulty === 'beginner' ? 'Principiante' :
                        viewingExerciseData?.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
-                    {(viewingExerciseData?.reps || viewingExerciseData?.duration) && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
-                        {viewingExerciseData?.reps ? `${viewingExerciseData.reps} reps` : `${viewingExerciseData?.duration}s`}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>

@@ -203,7 +203,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       </div>
 
       {/* Current Category Exercises */}
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
+      <div className="glass-card rounded-xl border border-zinc-700/30 p-4">
         <h3 className="text-white font-semibold mb-3">{currentCategory.name}</h3>
         
         {currentCategory.exercises.length === 0 ? (
@@ -247,7 +247,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
         
         <div className="space-y-3">
           {groups.map(group => (
-            <div key={group.id} className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+            <div key={group.id} className="glass-card rounded-xl border border-zinc-700/30 overflow-hidden">
               {/* Group Header - click anywhere to expand/collapse */}
               <button
                 onClick={() => toggleGroup(group.id)}
