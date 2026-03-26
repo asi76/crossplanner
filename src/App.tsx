@@ -388,14 +388,33 @@ function App() {
                               }}
                               className="bg-dark-bg rounded-lg p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors w-full mb-2 last:mb-0"
                             >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-white text-sm font-medium">
-                                  {ex.exerciseName || ex.exerciseId}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
-                                    <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
-                                  ))}
+                              <div className="flex items-start justify-between w-full">
+                                <div>
+                                  <span className="text-white text-base font-medium block">
+                                    {ex.exerciseName || ex.exerciseId}
+                                  </span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
+                                      <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                    exerciseData?.tipo === 'aerobico' 
+                                      ? 'bg-blue-500/20 text-blue-400' 
+                                      : 'bg-orange-500/20 text-orange-400'
+                                  }`}>
+                                    {exerciseData?.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                                  </span>
+                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                    exerciseData?.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                                    exerciseData?.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {exerciseData?.difficulty === 'beginner' ? 'Principiante' :
+                                     exerciseData?.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                                  </span>
                                 </div>
                               </div>
                             </div>
