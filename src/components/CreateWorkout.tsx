@@ -123,7 +123,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
     });
     const getMuscleColor = (muscle: string) => {
       const count = muscleCount[muscle] || 1;
-      if (count >= 3) return 'bg-red-500/40 text-red-300 border border-red-500/50';
+      if (count >= 4) return 'bg-red-500/40 text-red-300 border border-red-500/50';
+      if (count === 3) return 'bg-orange-500/40 text-orange-300 border border-orange-500/50';
       if (count === 2) return 'bg-yellow-500/40 text-yellow-300 border border-yellow-500/50';
       return 'bg-green-500/30 text-green-300 border border-green-500/40';
     };
