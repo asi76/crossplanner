@@ -162,19 +162,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Group selector */}
-            <select
-              value={ex.groupId || ''}
-              onChange={(e) => handleGroupChange(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs px-2 py-1 rounded bg-zinc-700 text-zinc-300 border border-zinc-600 cursor-pointer focus:outline-none focus:border-blue-500"
-            >
-              {groups.map(g => (
-                <option key={g.id} value={g.id}>{g.label}</option>
-              ))}
-            </select>
             <button
-              onClick={(e) => { e.stopPropagation(); handleRemoveExercise(selectedCategoryId, index); }}
+              onClick={() => handleRemoveExercise(selectedCategoryId, index)}
               className="p-1.5 text-zinc-500 hover:text-red-400"
             >
               <Trash2 className="w-4 h-4" />
