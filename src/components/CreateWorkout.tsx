@@ -835,7 +835,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             setEditingExerciseInModal(false);
           }}
           onSave={async (exerciseData) => {
-            // Update exercise in database, then close modal and show read-only
+            // Update exercise in database
             try {
               const { error } = await supabase
                 .from('exercises')
@@ -855,14 +855,11 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
               } else {
                 // Reload exercises to reflect changes
                 loadExercises();
-                // Close full edit modal and open read-only modal with updated exercise
-                setFullEditModalExercise(null);
-                setEditingExerciseInModal(false);
-                setViewingExercise({ ...exerciseData, id: fullEditModalExercise.id });
               }
             } catch (err) {
               console.error('Error saving exercise:', err);
             }
+            setFullEditModalExercise(null);
           }}
           onGifUpdated={async (exerciseId, newUrl) => {
             setViewingExerciseGif(newUrl);

@@ -219,7 +219,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     loadExercises();
   };
 
-  // Save exercise (create or update) - after save, switch to view mode
+  // Save exercise (create or update)
   const handleSaveExercise = async (exerciseData: Partial<Exercise>) => {
     try {
       if (modalMode === 'create' && createGroupId) {
@@ -245,10 +245,6 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           });
           return;
         }
-        
-        // Switch to view mode after create
-        setModalMode('view');
-        loadExercises();
       } else if (modalMode === 'edit' && selectedExercise) {
         const { error } = await supabase.from('exercises').update({
           name: exerciseData.name,
@@ -269,11 +265,10 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           });
           return;
         }
-        
-        // Switch to view mode after edit
-        setModalMode('view');
-        loadExercises();
       }
+      
+      loadExercises();
+      handleCloseModal();
     } catch (err) {
       console.error('Error saving exercise:', err);
       showNotification({
