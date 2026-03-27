@@ -252,7 +252,7 @@ function App() {
               <Plus className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-white font-bold text-xl mb-1">Crea Scheda</h3>
-            <p className="text-blue-200 text-sm">Planifica una sessione di crosstraining</p>
+            <p className="text-blue-200 text-sm">Pianifica una sessione di crosstraining</p>
           </motion.button>
 
           <motion.button
