@@ -50,6 +50,7 @@ export function ExerciseDetailModal({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(propMode === 'edit' || propMode === 'create');
   const [localGifUrl, setLocalGifUrl] = useState<string | null>(gifUrl);
   const [localGroupId, setLocalGroupId] = useState<string>(exercise.group_id || '');
@@ -317,20 +318,26 @@ export function ExerciseDetailModal({
     }
   };
 
-  const handleSave = () => {
-    if (!onSave) return;
+  const handleSave = async () => {
+    if (!onSave || isSaving) return;
+    
+    setIsSaving(true);
     
     const musclesArray = editMuscles.split(',').map(m => m.trim()).filter(m => m);
     
-    onSave({
-      name: editName,
-      muscles: musclesArray,
-      reps: editReps ? parseInt(editReps) : null,
-      duration: editDuration ? parseInt(editDuration) : null,
-      difficulty: editDifficulty,
-      tipo: editTipo,
-      description: editDescription
-    });
+    try {
+      await onSave({
+        name: editName,
+        muscles: musclesArray,
+        reps: editReps ? parseInt(editReps) : null,
+        duration: editDuration ? parseInt(editDuration) : null,
+        difficulty: editDifficulty,
+        tipo: editTipo,
+        description: editDescription
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Open Google Images search for this exercise
@@ -376,10 +383,11 @@ export function ExerciseDetailModal({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
                 >
                   <Save className="w-4 h-4" />
-                  Salva
+                  {isSaving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </>
             )}
