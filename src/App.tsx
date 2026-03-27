@@ -99,6 +99,28 @@ function App() {
     return category?.exercises || [];
   };
 
+  // Count muscle occurrences across ALL categories in a workout
+  const getMuscleCountForWorkout = (workout: Workout) => {
+    const muscleCount: Record<string, number> = {};
+    workout.stations.forEach((station: any) => {
+      station.exercises?.forEach((ex: any) => {
+        const data = getExerciseById(ex.exerciseId);
+        data?.muscles?.forEach((m: string) => {
+          muscleCount[m] = (muscleCount[m] || 0) + 1;
+        });
+      });
+    });
+    return muscleCount;
+  };
+
+  const getMuscleColor = (muscle: string, muscleCount: Record<string, number>) => {
+    const count = muscleCount[muscle] || 1;
+    if (count >= 4) return 'bg-red-500/40 text-red-300 border border-red-500/50';
+    if (count === 3) return 'bg-orange-500/40 text-orange-300 border border-orange-500/50';
+    if (count === 2) return 'bg-yellow-500/40 text-yellow-300 border border-yellow-500/50';
+    return 'bg-green-500/30 text-green-300 border border-green-500/40';
+  };
+
   const getExerciseById = (id: string) => {
     return allExercises.find(e => e.id === id);
   };
@@ -401,9 +423,11 @@ function App() {
 
                       {/* Exercise List - fixed height container, no dumbbell icon */}
                       <div className="p-4 min-h-[200px]">
-                        {getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
-                          const exerciseData = getExerciseById(ex.exerciseId);
-                          return (
+                        {(() => {
+                          const muscleCount = getMuscleCountForWorkout(workout);
+                          return getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
+                            const exerciseData = getExerciseById(ex.exerciseId);
+                            return (
                             <div 
                               key={index}
                               onClick={async () => {
@@ -424,7 +448,7 @@ function App() {
                                   </span>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
-                                      <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-300">{m}</span>
+                                      <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${getMuscleColor(m, muscleCount)}`}>{m}</span>
                                     ))}
                                   </div>
                                 </div>
@@ -447,8 +471,9 @@ function App() {
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                       </div>
                     </motion.div>
                   )}
