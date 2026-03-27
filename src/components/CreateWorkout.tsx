@@ -332,11 +332,11 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
         
         <div className="space-y-3">
           {groups.map(group => (
-            <div key={group.id} className="glass-card rounded-xl overflow-hidden">
-              {/* Group Header - glass dark, 30% darker */}
+            <div key={group.id} className="bg-zinc-900 rounded-xl border border-zinc-800">
+              {/* Group Header */}
               <button
                 onClick={() => toggleGroup(group.id)}
-                className="w-full px-5 py-4 flex items-center justify-between glass-dark hover:brightness-110 transition-all"
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
@@ -353,9 +353,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                 )}
               </button>
 
-              {/* Exercises List - shown when expanded, lighter separators */}
+              {/* Exercises List - shown when expanded */}
               {expandedGroups.has(group.id) && (
-                <div className="border-t border-white/10 max-h-96 overflow-y-auto scrollbar-dark">
+                <div className="border-t border-zinc-800 max-h-96 overflow-y-auto scrollbar-dark">
                   {getExercisesByGroup(group.id).length === 0 ? (
                     <div className="px-5 py-8 text-center text-zinc-500">
                       Nessun esercizio
@@ -364,7 +364,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     getExercisesByGroup(group.id).map(exercise => (
                       <div
                         key={exercise.id}
-                        className="px-5 py-4 border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors"
+                        className="px-5 py-4 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
