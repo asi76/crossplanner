@@ -61,6 +61,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [viewingExerciseIndex, setViewingExerciseIndex] = useState<number | null>(null);
+  const [isHandlingAction, setIsHandlingAction] = useState(false);
 
   const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
@@ -193,18 +194,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const hasChanges = workoutName !== initialName || JSON.stringify(workoutCategories) !== JSON.stringify(initialStations);
 
   const handleUnsavedChanges = (action: () => void) => {
+    if (isHandlingAction) return;
     if (!hasChanges) {
       action();
       return;
     }
+    setIsHandlingAction(true);
     showNotification({
       type: 'confirm',
       title: 'Modifiche non salvate',
       message: 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?',
       confirmText: 'Salva',
       cancelText: 'Ignora',
-      onConfirm: async () => { await handleSave(); action(); },
-      onCancel: () => action(),
+      onConfirm: async () => { await handleSave(); action(); setIsHandlingAction(false); },
+      onCancel: () => { action(); setIsHandlingAction(false); },
     });
   };
 
