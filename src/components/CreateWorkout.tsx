@@ -193,35 +193,16 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const hasChanges = workoutName !== initialName || JSON.stringify(workoutCategories) !== JSON.stringify(initialStations);
 
   const handleUnsavedChanges = (action: () => void) => {
-    // Use a ref to track if we're currently showing a dialog
     const currentHasChanges = workoutName !== initialName || JSON.stringify(workoutCategories) !== JSON.stringify(initialStations);
     if (!currentHasChanges) {
       action();
       return;
     }
-    
-    // Prevent multiple dialogs by checking if one is already shown
-    if ((window as any).__unsavedDialogShown) {
-      return;
+    const save = confirm('Ci sono modifiche non salvate. Vuoi salvare prima di uscire?');
+    if (save) {
+      handleSave();
     }
-    (window as any).__unsavedDialogShown = true;
-    
-    showNotification({
-      type: 'confirm',
-      title: 'Modifiche non salvate',
-      message: 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?',
-      confirmText: 'Salva',
-      cancelText: 'Ignora',
-      onConfirm: async () => { 
-        (window as any).__unsavedDialogShown = false;
-        await handleSave(); 
-        action(); 
-      },
-      onCancel: () => { 
-        (window as any).__unsavedDialogShown = false;
-        action(); 
-      },
-    });
+    action();
   };
 
   // Load groups and exercises from Supabase
