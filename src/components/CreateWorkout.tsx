@@ -835,7 +835,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             setEditingExerciseInModal(false);
           }}
           onSave={async (exerciseData) => {
-            // Update exercise in database
+            // Update exercise in database and local state
             try {
               const { error } = await supabase
                 .from('exercises')
@@ -852,6 +852,15 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
               if (error) {
                 console.error('Error updating exercise:', error);
+              } else {
+                // Update local exercises state immediately
+                setExercises(prev => prev.map(ex => 
+                  ex.id === fullEditModalExercise.id 
+                    ? { ...ex, ...exerciseData }
+                    : ex
+                ));
+                // Also update viewingExercise so read-only modal shows updated data
+                setViewingExercise(prev => prev ? { ...prev, ...exerciseData } : null);
               }
             } catch (err) {
               console.error('Error saving exercise:', err);
