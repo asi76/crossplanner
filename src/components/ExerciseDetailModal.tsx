@@ -51,7 +51,13 @@ export function ExerciseDetailModal({
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(propMode === 'edit' || propMode === 'create');
+  const [localGifUrl, setLocalGifUrl] = useState<string | null>(gifUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync local GIF URL with prop
+  useEffect(() => {
+    setLocalGifUrl(gifUrl);
+  }, [gifUrl]);
 
   // Form state for edit mode
   const [editName, setEditName] = useState(exercise.name || '');
@@ -245,6 +251,9 @@ export function ExerciseDetailModal({
       // Save to database with timestamp filename
       await setGifUrl(exercise.id, cachedUrl);
       
+      // Update local GIF URL immediately for instant display
+      setLocalGifUrl(cachedUrl);
+      
       // Notify parent with cache-busted URL
       if (onGifUpdated) {
         onGifUpdated(exercise.id, cachedUrl);
@@ -265,7 +274,7 @@ export function ExerciseDetailModal({
   };
 
   const handleDeleteGif = async () => {
-    if (!gifUrl) return;
+    if (!localGifUrl) return;
 
     setIsDeleting(true);
     setUploadProgress('Eliminazione in corso...');
@@ -283,6 +292,10 @@ export function ExerciseDetailModal({
 
       // Remove from database
       await removeGifUrl(exercise.id);
+      
+      // Update local GIF URL immediately
+      setLocalGifUrl(null);
+      setImageError(false);
 
       if (onGifUpdated) {
         onGifUpdated(exercise.id, null);
@@ -384,10 +397,10 @@ export function ExerciseDetailModal({
           <div className="md:w-1/2 bg-zinc-950 flex flex-col p-4">
             {/* GIF Display */}
             <div className="flex-1 flex items-center justify-center min-h-[200px]">
-              {gifUrl && !imageError ? (
+              {localGifUrl && !imageError ? (
                 <div className="relative w-full h-full flex items-center justify-center">
                   <img
-                    src={gifUrl}
+                    src={localGifUrl}
                     alt={`${exercise.name} animation`}
                     className="max-w-full max-h-full object-contain rounded-lg"
                     onError={() => setImageError(true)}
