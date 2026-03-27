@@ -319,7 +319,6 @@ export function ExerciseDetailModal({
   };
 
   const handleSave = async () => {
-    console.log('handleSave called, onSave exists:', !!onSave, 'isSaving:', isSaving);
     if (!onSave || isSaving) return;
     
     setIsSaving(true);
@@ -327,7 +326,6 @@ export function ExerciseDetailModal({
     const musclesArray = editMuscles.split(',').map(m => m.trim()).filter(m => m);
     
     try {
-      console.log('Calling onSave with:', { name: editName, muscles: musclesArray });
       await onSave({
         name: editName,
         muscles: musclesArray,
@@ -337,9 +335,6 @@ export function ExerciseDetailModal({
         tipo: editTipo,
         description: editDescription
       });
-      console.log('onSave completed');
-    } catch (err) {
-      console.error('Error in onSave:', err);
     } finally {
       setIsSaving(false);
     }

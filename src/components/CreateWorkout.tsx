@@ -835,7 +835,6 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             setEditingExerciseInModal(false);
           }}
           onSave={async (exerciseData) => {
-            console.log('CreateWorkout onSave called with:', exerciseData);
             // Update exercise in database
             try {
               const { error } = await supabase
@@ -853,10 +852,6 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
               if (error) {
                 console.error('Error updating exercise:', error);
-              } else {
-                console.log('Exercise updated successfully');
-                // Reload exercises to reflect changes
-                loadExercises();
               }
             } catch (err) {
               console.error('Error saving exercise:', err);
