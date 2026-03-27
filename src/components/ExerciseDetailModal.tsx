@@ -321,7 +321,9 @@ export function ExerciseDetailModal({
 
   // Open Google Images search for this exercise
   const searchGif = () => {
-    const query = encodeURIComponent(`${exercise.name} exercise gif`);
+    // Use editName if in edit/create mode, otherwise use exercise.name
+    const nameToSearch = (isEditing ? editName : exercise.name) || '';
+    const query = encodeURIComponent(`${nameToSearch} gif`);
     const searchUrl = `https://www.google.com/search?tbs=itp:animated&tbm=isch&q=${query}`;
     const width = 600;
     const height = 400;

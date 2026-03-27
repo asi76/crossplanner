@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Trash2, ChevronDown, ChevronUp, ArrowLeft, Target, Image, Shield, RefreshCw, LogOut, GripVertical } from 'lucide-react';
+import { Plus, X, Trash2, ChevronDown, ChevronUp, ArrowLeft, Target, Image, Shield, RefreshCw, LogOut, GripVertical, Edit3, ArrowRightLeft } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -7,6 +7,7 @@ import { supabase } from '../supabase';
 import { getGifUrl } from '../data/gifMapping';
 import { Workout } from '../data/types';
 import { useAuth } from '../hooks/useAuth';
+import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 interface ExerciseGroup {
   id: string;
@@ -60,6 +61,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [viewingExerciseIndex, setViewingExerciseIndex] = useState<number | null>(null);
+  const [editingExerciseInModal, setEditingExerciseInModal] = useState(false);
+  const [moveExerciseModal, setMoveExerciseModal] = useState<{ exerciseIndex: number; fromCategory: string } | null>(null);
 
   const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
@@ -170,6 +173,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); setMoveExerciseModal({ exerciseIndex: index, fromCategory: selectedCategoryId }); }}
+              className="p-1.5 text-zinc-500 hover:text-blue-400"
+              title="Sposta esercizio"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleViewExercise(exerciseData!, index); setEditingExerciseInModal(true); }}
+              className="p-1.5 text-zinc-500 hover:text-blue-400"
+              title="Modifica esercizio"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
             <button
               onClick={(e) => { e.stopPropagation(); handleRemoveExercise(selectedCategoryId, index); }}
               className="p-1.5 text-zinc-500 hover:text-red-400"
@@ -283,6 +300,30 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       newCategories[catIndex].exercises.splice(exerciseIndex, 1);
       setWorkoutCategories(newCategories);
     }
+  };
+
+  // Move exercise to another category
+  const handleMoveExercise = (toCategoryId: string) => {
+    if (!moveExerciseModal) return;
+    const { exerciseIndex, fromCategory } = moveExerciseModal;
+    if (fromCategory === toCategoryId) {
+      setMoveExerciseModal(null);
+      return;
+    }
+
+    const newCategories = workoutCategories.map(cat => ({
+      ...cat,
+      exercises: [...cat.exercises]
+    }));
+    const fromCatIndex = newCategories.findIndex(c => c.id === fromCategory);
+    const toCatIndex = newCategories.findIndex(c => c.id === toCategoryId);
+    
+    if (fromCatIndex !== -1 && toCatIndex !== -1) {
+      const [removed] = newCategories[fromCatIndex].exercises.splice(exerciseIndex, 1);
+      newCategories[toCatIndex].exercises.push(removed);
+      setWorkoutCategories(newCategories);
+    }
+    setMoveExerciseModal(null);
   };
 
   // View exercise
@@ -558,19 +599,21 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
       {/* View-Only Exercise Modal */}
       {viewingExercise && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setViewingExercise(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => { setViewingExercise(null); setEditingExerciseInModal(false); }}>
           <div 
             className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - 20% smaller */}
+            {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
               <div className="flex items-center gap-3">
                 <Target className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-bold text-white">{viewingExercise.name}</h2>
+                <h2 className="text-lg font-bold text-white">
+                  {editingExerciseInModal ? 'Modifica Esercizio' : viewingExercise.name}
+                </h2>
               </div>
               <button
-                onClick={() => setViewingExercise(null)}
+                onClick={() => { setViewingExercise(null); setEditingExerciseInModal(false); }}
                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-zinc-400" />
@@ -595,61 +638,180 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                 )}
               </div>
 
-              {/* Right - Info */}
+              {/* Right - Info or Edit Form */}
               <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
-                <div className="space-y-4">
-                  {/* Descrizione */}
-                  <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                    <p className="text-zinc-300 text-base leading-relaxed">
-                      {viewingExercise.description || 'Nessuna descrizione disponibile.'}
-                    </p>
-                  </div>
-
-                  {/* Muscoli */}
-                  <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {viewingExercise.muscles?.map((muscle, idx) => (
-                        <span key={idx} className="px-2 py-1 rounded text-sm bg-white/20 text-white border border-white/30">
-                          {muscle}
-                        </span>
-                      ))}
+                {editingExerciseInModal ? (
+                  /* Edit Form */
+                  <div className="space-y-4">
+                    {/* Gruppo - selector in edit mode */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
+                      <select
+                        value={editingGroupId || viewingExercise.group_id || ''}
+                        onChange={(e) => {
+                          setEditingGroupId(e.target.value);
+                          if (viewingExerciseIndex !== null) {
+                            const newCategories = [...workoutCategories];
+                            const catIndex = newCategories.findIndex(c => c.id === selectedCategoryId);
+                            if (catIndex !== -1) {
+                              newCategories[catIndex].exercises[viewingExerciseIndex].groupId = e.target.value;
+                              setWorkoutCategories(newCategories);
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-600 rounded-lg focus:outline-none focus:border-blue-500"
+                      >
+                        {groups.map(g => (
+                          <option key={g.id} value={g.id}>{g.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {/* Muscoli */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingExercise.muscles?.map((muscle, idx) => (
+                          <span key={idx} className="px-2 py-1 rounded text-sm bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                            {muscle}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Tipo e Difficolta */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm px-3 py-1 rounded ${
+                        viewingExercise.tipo === 'aerobico' 
+                          ? 'bg-blue-500/20 text-blue-400' 
+                          : 'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                      </span>
+                      <span className={`text-sm px-3 py-1 rounded ${
+                        viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                        viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {viewingExercise.difficulty === 'beginner' ? 'Principiante' :
+                         viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                      </span>
+                    </div>
+                    {/* Descrizione */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
+                      <p className="text-zinc-300 text-base leading-relaxed">
+                        {viewingExercise.description || 'Nessuna descrizione disponibile.'}
+                      </p>
                     </div>
                   </div>
+                ) : (
+                  /* View Mode */
+                  <div className="space-y-4">
+                    {/* Descrizione */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
+                      <p className="text-zinc-300 text-base leading-relaxed">
+                        {viewingExercise.description || 'Nessuna descrizione disponibile.'}
+                      </p>
+                    </div>
 
-                  {/* Tipo e Difficolta */}
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm px-3 py-1 rounded ${
-                      viewingExercise.tipo === 'aerobico' 
-                        ? 'bg-blue-500/20 text-blue-400' 
-                        : 'bg-orange-500/20 text-orange-400'
-                    }`}>
-                      {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                    </span>
-                    <span className={`text-sm px-3 py-1 rounded ${
-                      viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                      viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {viewingExercise.difficulty === 'beginner' ? 'Principiante' :
-                       viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                    </span>
-                  </div>
+                    {/* Muscoli */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingExercise.muscles?.map((muscle, idx) => (
+                          <span key={idx} className="px-2 py-1 rounded text-sm bg-white/20 text-white border border-white/30">
+                            {muscle}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
 
-                  {/* Gruppo - displayed as value */}
-                  <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
-                    <p className="text-white font-medium">
-                      {groups.find(g => g.id === (editingGroupId || viewingExercise.group_id))?.label || 'Nessun gruppo'}
-                    </p>
+                    {/* Tipo e Difficolta */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm px-3 py-1 rounded ${
+                        viewingExercise.tipo === 'aerobico' 
+                          ? 'bg-blue-500/20 text-blue-400' 
+                          : 'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                      </span>
+                      <span className={`text-sm px-3 py-1 rounded ${
+                        viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                        viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {viewingExercise.difficulty === 'beginner' ? 'Principiante' :
+                         viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                      </span>
+                    </div>
+
+                    {/* Gruppo - displayed as value */}
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
+                      <p className="text-white font-medium">
+                        {groups.find(g => g.id === (editingGroupId || viewingExercise.group_id))?.label || 'Nessun gruppo'}
+                      </p>
+                    </div>
+
+                    {/* Modifica Button */}
+                    <div className="flex justify-end pt-3">
+                      <button
+                        onClick={() => setEditingExerciseInModal(true)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
+                      >
+                        Modifica
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
+      {/* Move Exercise Modal */}
+      {moveExerciseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setMoveExerciseModal(null)}>
+          <div
+            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-500/20 p-2 rounded-lg">
+                  <ArrowRightLeft className="w-5 h-5 text-blue-400" />
+                </div>
+                <h2 className="text-lg font-bold text-white">Sposta esercizio</h2>
+              </div>
+              <button
+                onClick={() => setMoveExerciseModal(null)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-zinc-300 mb-4">Seleziona la tab dove vuoi spostare l'esercizio:</p>
+              {workoutCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleMoveExercise(cat.id)}
+                  className={`w-full px-4 py-3 rounded-lg text-left font-medium transition-colors ${
+                    cat.id === moveExerciseModal.fromCategory
+                      ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  }`}
+                  disabled={cat.id === moveExerciseModal.fromCategory}
+                >
+                  {cat.name}
+                  {cat.id === moveExerciseModal.fromCategory && ' (corrente)'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Duplicate Error Modal */}
       {duplicateError && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setDuplicateError(null)}>
