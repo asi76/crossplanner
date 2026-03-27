@@ -298,9 +298,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
           />
           <button
             onClick={handleSave}
-            className="w-[15%] py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
+            className="w-[20%] py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
           >
-            Salva Workout
+            Salva
           </button>
         </div>
       </div>
