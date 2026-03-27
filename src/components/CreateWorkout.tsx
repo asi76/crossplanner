@@ -57,6 +57,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [viewingExercise, setViewingExercise] = useState<Exercise | null>(null);
   const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
@@ -97,6 +98,18 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       transition,
     };
     const exerciseData = getExerciseById(ex.exerciseId);
+    const exerciseGroup = groups.find(g => g.id === ex.groupId);
+    const groupLabel = exerciseGroup?.label || 'Nessun gruppo';
+
+    // Handle group change
+    const handleGroupChange = (newGroupId: string) => {
+      const newCategories = [...workoutCategories];
+      const catIndex = newCategories.findIndex(c => c.id === selectedCategoryId);
+      if (catIndex !== -1) {
+        newCategories[catIndex].exercises[index].groupId = newGroupId;
+        setWorkoutCategories(newCategories);
+      }
+    };
 
     return (
       <div
@@ -124,9 +137,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* Group selector */}
+            <select
+              value={ex.groupId || ''}
+              onChange={(e) => handleGroupChange(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs px-2 py-1 rounded bg-zinc-700 text-zinc-300 border border-zinc-600 cursor-pointer focus:outline-none focus:border-blue-500"
+            >
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.label}</option>
+              ))}
+            </select>
             <button
-              onClick={() => handleRemoveExercise(selectedCategoryId, index)}
+              onClick={(e) => { e.stopPropagation(); handleRemoveExercise(selectedCategoryId, index); }}
               className="p-1.5 text-zinc-500 hover:text-red-400"
             >
               <Trash2 className="w-4 h-4" />
@@ -195,8 +219,18 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
   // Add exercise to current category and collapse the group it belongs to
   const handleAddExercise = (exercise: Exercise, groupId: string) => {
+    // Check if exercise already exists in any category
+    const alreadyExists = workoutCategories.some(cat =>
+      cat.exercises.some(ex => ex.exerciseId === exercise.id)
+    );
+    if (alreadyExists) {
+      setDuplicateError(exercise.name);
+      return;
+    }
+
     const newExercise = {
       exerciseId: exercise.id,
+      groupId: groupId,
       sets: exercise.reps ? 3 : 4,
       reps: exercise.reps || 10,
       rest: 60,
@@ -546,6 +580,42 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Duplicate Error Modal */}
+      {duplicateError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setDuplicateError(null)}>
+          <div
+            className="bg-zinc-900 rounded-2xl border border-red-500/50 w-full max-w-md overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="bg-red-500/20 p-2 rounded-lg">
+                  <X className="w-5 h-5 text-red-400" />
+                </div>
+                <h2 className="text-lg font-bold text-white">Esercizio gia inserito</h2>
+              </div>
+              <button
+                onClick={() => setDuplicateError(null)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+            <div className="p-5">
+              <p className="text-zinc-300 mb-2">L'esercizio <span className="text-white font-medium">{duplicateError}</span> e' gia presente in una delle tre tabelle.</p>
+              <p className="text-zinc-500 text-sm">Rimuovi prima l'esercizio esistente per aggiungerlo a questa tabella.</p>
+            </div>
+            <div className="px-5 py-4 border-t border-zinc-800 flex justify-end">
+              <button
+                onClick={() => setDuplicateError(null)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors"
+              >
+                Chiudi
+              </button>
             </div>
           </div>
         </div>
