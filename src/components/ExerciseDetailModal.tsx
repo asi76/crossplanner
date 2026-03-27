@@ -482,89 +482,100 @@ export function ExerciseDetailModal({
           {/* Right - Description / Edit Form */}
           <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
             {isEditing ? (
-              /* Edit/Create Form - compact version */
-              <div className="modal-edit-form space-y-3">
+              /* Edit/Create Form - styled like view mode */
+              <div className="space-y-5">
+                {/* Gruppo - selector at top */}
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Nome</label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-                    placeholder="Nome esercizio"
-                  />
+                  <h3 className="text-base font-medium text-zinc-400 mb-2">Gruppo</h3>
+                  <select
+                    value={exercise.group_id || ''}
+                    onChange={(e) => {
+                      if (onMoveGroup) {
+                        onMoveGroup(exercise.id, e.target.value);
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-600 rounded-lg focus:outline-none focus:border-blue-500 text-base"
+                  >
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>{g.label}</option>
+                    ))}
+                  </select>
                 </div>
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  <span className={`px-3 py-1.5 rounded-full text-base font-medium border ${difficultyColor}`}>
+                    {difficultyLabel}
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-full text-base font-medium border ${
+                    editTipo === 'aerobico' 
+                      ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' 
+                      : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                  }`}>
+                    {editTipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                  </span>
+                </div>
+                {/* Muscoli */}
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Muscoli</label>
+                  <h3 className="text-base font-medium text-zinc-400 mb-2">Muscoli</h3>
                   <input
                     type="text"
                     value={editMuscles}
                     onChange={(e) => setEditMuscles(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-base"
                     placeholder="Chest, Shoulders"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Reps</label>
-                    <input
-                      type="number"
-                      value={editReps}
-                      onChange={(e) => setEditReps(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="12"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Durata (s)</label>
-                    <input
-                      type="number"
-                      value={editDuration}
-                      onChange={(e) => setEditDuration(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="30"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Difficolta</label>
-                    <select
-                      value={editDifficulty}
-                      onChange={(e) => setEditDifficulty(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-                    >
-                      <option value="beginner">Principiante</option>
-                      <option value="intermediate">Intermedio</option>
-                      <option value="advanced">Avanzato</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Tipo</label>
-                    <select
-                      value={editTipo}
-                      onChange={(e) => setEditTipo(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-                    >
-                      <option value="anaerobico">Anaerobico</option>
-                      <option value="aerobico">Aerobico</option>
-                    </select>
-                  </div>
-                </div>
+                {/* Descrizione */}
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Descrizione</label>
+                  <h3 className="text-base font-medium text-zinc-400 mb-2">Descrizione</h3>
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 resize-none text-sm"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-blue-500 resize-none text-base"
                     placeholder="Descrizione..."
                   />
+                </div>
+                {/* Reps and Duration */}
+                <div className="flex flex-wrap gap-2">
+                  {editReps && (
+                    <span className="px-3 py-1.5 rounded-full text-base font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1.5">
+                      <Zap className="w-5 h-5" />
+                      <input
+                        type="number"
+                        value={editReps}
+                        onChange={(e) => setEditReps(e.target.value)}
+                        className="w-12 bg-transparent text-white focus:outline-none"
+                        style={{ width: `${Math.max(editReps.length, 2)}ch` }}
+                      />
+                      reps
+                    </span>
+                  )}
+                  {editDuration && (
+                    <span className="px-3 py-1.5 rounded-full text-base font-medium bg-zinc-800 text-zinc-300 flex items-center gap-1.5">
+                      <Clock className="w-5 h-5" />
+                      <input
+                        type="number"
+                        value={editDuration}
+                        onChange={(e) => setEditDuration(e.target.value)}
+                        className="w-12 bg-transparent text-white focus:outline-none"
+                        style={{ width: `${Math.max(editDuration.length, 2)}ch` }}
+                      />
+                      s
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
               /* View Mode - larger 20% */
               <div className="space-y-5">
+                {/* Gruppo - displayed at top */}
+                <div>
+                  <h3 className="text-base font-medium text-zinc-400 mb-2">Gruppo</h3>
+                  <span className={`px-3 py-1 rounded-full text-base font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20`}>
+                    {groups.find(g => g.id === exercise.group_id)?.label || 'Nessun gruppo'}
+                  </span>
+                </div>
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2">
                   <span className={`px-3 py-1.5 rounded-full text-base font-medium border ${difficultyColor}`}>
