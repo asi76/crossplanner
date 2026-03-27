@@ -246,26 +246,30 @@ function App() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('create')}
-            className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-left group"
+            className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-left group flex items-center gap-4"
           >
-            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
               <Plus className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-white font-bold text-xl mb-1">Crea nuova scheda</h3>
-            <p className="text-blue-200 text-sm">Pianifica una sessione di crosstraining</p>
+            <div>
+              <h3 className="text-white font-bold text-lg">Crea nuova scheda</h3>
+              <p className="text-blue-200 text-sm">Pianifica una sessione di crosstraining</p>
+            </div>
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('library')}
-            className="bg-dark-card border border-dark-border rounded-2xl p-6 text-left group hover:border-blue-500/50 transition-colors"
+            className="bg-dark-card border border-dark-border rounded-2xl p-5 text-left group hover:border-blue-500/50 transition-colors flex items-center gap-4"
           >
-            <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-500/30 transition-colors">
+            <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-500/30 transition-colors">
               <Library className="w-6 h-6 text-blue-400" />
             </div>
-            <h3 className="text-white font-bold text-xl mb-1">Libreria Esercizi</h3>
-            <p className="text-gray-400 text-sm">Consulta, aggiungi e modifica esercizi</p>
+            <div>
+              <h3 className="text-white font-bold text-lg">Libreria Esercizi</h3>
+              <p className="text-gray-400 text-sm">Consulta, aggiungi e modifica esercizi</p>
+            </div>
           </motion.button>
         </div>
 
