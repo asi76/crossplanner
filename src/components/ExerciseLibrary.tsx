@@ -647,6 +647,8 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           onSave={handleSaveExercise}
           onEdit={handleOpenEdit}
           onGifUpdated={(id, url) => setSelectedExerciseGif(url)}
+          groups={groups}
+          onMoveGroup={(id, groupId) => moveExercise(id, groupId)}
         />
       )}
 

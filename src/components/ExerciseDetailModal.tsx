@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search, Save, Edit3 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Clock, Zap, Target, Trash2, Upload, Image, Loader2, Search, Save, Edit3, ArrowRightLeft } from 'lucide-react';
 import { Exercise } from '../data/types';
 import { supabase } from '../supabase';
 import { getGifUrl, setGifUrl, removeGifUrl } from '../data/gifMapping';
@@ -17,6 +17,15 @@ interface ExerciseDetailModalProps {
   onGifUpdated?: (exerciseId: string, newUrl: string | null) => void;
   showUpload?: boolean;
   mode?: 'view' | 'edit' | 'create';
+  groups?: Group[];
+  onMoveGroup?: (exerciseId: string, newGroupId: string) => void;
+}
+
+interface Group {
+  id: string;
+  name: string;
+  label: string;
+  color_class: string;
 }
 
 export function ExerciseDetailModal({
@@ -32,7 +41,10 @@ export function ExerciseDetailModal({
   onGifUpdated,
   showUpload = true,
   mode: propMode = 'view',
+  groups = [],
+  onMoveGroup,
 }: ExerciseDetailModalProps) {
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -598,8 +610,15 @@ export function ExerciseDetailModal({
                   <p className="text-zinc-200 text-base leading-relaxed">{editDescription || getDescription(exercise.name)}</p>
                 </div>
 
-                {/* Edit Button Only */}
-                <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
+                {/* Edit and Move Buttons */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+                  <button
+                    onClick={() => setShowGroupSelector(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-base transition-colors"
+                  >
+                    <ArrowRightLeft className="w-5 h-5" />
+                    Sposta Gruppo
+                  </button>
                   <button
                     onClick={() => {
                       setIsEditing(true);
@@ -616,6 +635,41 @@ export function ExerciseDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Group Selector Modal */}
+      {showGroupSelector && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
+          <div className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-lg font-bold text-white">Sposta esercizio</h2>
+              <button
+                onClick={() => setShowGroupSelector(false)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+            <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto">
+              {groups.map(group => (
+                <button
+                  key={group.id}
+                  onClick={() => {
+                    if (onMoveGroup) {
+                      onMoveGroup(exercise.id, group.id);
+                    }
+                    setShowGroupSelector(false);
+                  }}
+                  className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-left transition-colors"
+                >
+                  <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
+                    {group.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
