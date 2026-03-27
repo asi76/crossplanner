@@ -43,7 +43,12 @@ function App() {
     saveWorkout,
     deleteWorkout
   } = useWorkout();
-  const [currentView, setCurrentView] = useState<View>('home');
+  const [currentView, setCurrentView] = useState<View>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('lastView') as View) || 'home';
+    }
+    return 'home';
+  });
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('forza');
@@ -67,6 +72,11 @@ function App() {
       loadSavedWorkouts();
     }
   }, [role, loadSavedWorkouts]);
+
+  // Persist current view to localStorage
+  useEffect(() => {
+    localStorage.setItem('lastView', currentView);
+  }, [currentView]);
 
   const handleStartWorkout = (workout: Workout) => {
     setActiveWorkout(workout);
