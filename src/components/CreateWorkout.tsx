@@ -58,6 +58,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const [viewingExercise, setViewingExercise] = useState<Exercise | null>(null);
   const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [viewingExerciseIndex, setViewingExerciseIndex] = useState<number | null>(null);
 
   const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
@@ -144,9 +146,14 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
               <GripVertical className="w-4 h-4" />
             </button>
             <div>
-              <span className="text-white text-base font-medium block">
-                {ex.exerciseName || ex.exerciseId}
-              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleViewExercise(exerciseData!, index); }}
+                className="text-left hover:text-blue-400 transition-colors"
+              >
+                <span className="text-white text-base font-medium block">
+                  {ex.exerciseName || ex.exerciseId}
+                </span>
+              </button>
               <div className="flex flex-wrap gap-1 mt-1">
                 {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
                   <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${getMuscleColor(m)}`}>{m}</span>
@@ -279,14 +286,35 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   };
 
   // View exercise
-  const handleViewExercise = async (exercise: Exercise) => {
+  const handleViewExercise = async (exercise: Exercise, exerciseIndex?: number) => {
     setViewingExerciseGif(null);
     setViewingExercise(exercise);
+    setViewingExerciseIndex(exerciseIndex ?? null);
+    // Set initial editing group from the workout category exercise if available
+    if (exerciseIndex !== undefined && exerciseIndex !== null) {
+      const ex = currentCategory.exercises[exerciseIndex];
+      setEditingGroupId(ex?.groupId || exercise.group_id || '');
+    } else {
+      setEditingGroupId(exercise.group_id || '');
+    }
     try {
       const gifUrl = await getGifUrl(exercise.id);
       setViewingExerciseGif(gifUrl);
     } catch {
       setViewingExerciseGif(null);
+    }
+  };
+
+  // Handle group change from modal
+  const handleModalGroupChange = (newGroupId: string) => {
+    setEditingGroupId(newGroupId);
+    if (viewingExerciseIndex !== null) {
+      const newCategories = [...workoutCategories];
+      const catIndex = newCategories.findIndex(c => c.id === selectedCategoryId);
+      if (catIndex !== -1) {
+        newCategories[catIndex].exercises[viewingExerciseIndex].groupId = newGroupId;
+        setWorkoutCategories(newCategories);
+      }
     }
   };
 
@@ -594,6 +622,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                       {viewingExercise.difficulty === 'beginner' ? 'Principiante' :
                        viewingExercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
                     </span>
+                  </div>
+
+                  {/* Gruppo */}
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
+                    <select
+                      value={editingGroupId || viewingExercise.group_id || ''}
+                      onChange={(e) => handleModalGroupChange(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-800 text-white border border-zinc-600 cursor-pointer focus:outline-none focus:border-blue-500"
+                    >
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
