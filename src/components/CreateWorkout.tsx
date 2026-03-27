@@ -7,6 +7,7 @@ import { supabase } from '../supabase';
 import { getGifUrl } from '../data/gifMapping';
 import { Workout } from '../data/types';
 import { useAuth } from '../hooks/useAuth';
+import { showNotification } from './NotificationModal';
 
 interface ExerciseGroup {
   id: string;
@@ -195,12 +196,15 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       action();
       return;
     }
-    const save = confirm('Ci sono modifiche non salvate. Vuoi salvare prima di uscire?');
-    if (save) {
-      handleSave();
-    } else {
-      action();
-    }
+    showNotification({
+      type: 'confirm',
+      title: 'Modifiche non salvate',
+      message: 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?',
+      confirmText: 'Salva',
+      cancelText: 'Ignora',
+      onConfirm: () => { handleSave(); action(); },
+      onCancel: () => action(),
+    });
   };
 
   // Load groups and exercises from Supabase
@@ -319,7 +323,11 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
   const handleSave = async () => {
     if (!workoutName.trim() || workoutCategories.every(s => s.exercises.length === 0)) {
-      alert('Inserisci un nome e aggiungi almeno un esercizio');
+      showNotification({
+        type: 'alert',
+        title: 'Campi richiesti',
+        message: 'Inserisci un nome e aggiungi almeno un esercizio',
+      });
       return;
     }
 

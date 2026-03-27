@@ -19,6 +19,7 @@ import {
   rejectUser, 
   removeUser 
 } from '../firebase/auth';
+import { showNotification } from './NotificationModal';
 
 interface PendingUser {
   id: string;
@@ -87,15 +88,22 @@ export const AdminPanel = () => {
   };
 
   const handleRemove = async (email: string) => {
-    if (!confirm(`Are you sure you want to remove ${email}?`)) return;
-    setActionLoading(email);
-    try {
-      await removeUser(email);
-      await fetchUsers();
-    } catch (error) {
-      console.error('Error removing user:', error);
-    }
-    setActionLoading(null);
+    showNotification({
+      type: 'confirm',
+      title: 'Conferma rimozione',
+      message: `Sei sicuro di voler rimuovere ${email}?`,
+      confirmText: 'Rimuovi',
+      onConfirm: async () => {
+        setActionLoading(email);
+        try {
+          await removeUser(email);
+          await fetchUsers();
+        } catch (error) {
+          console.error('Error removing user:', error);
+        }
+        setActionLoading(null);
+      },
+    });
   };
 
   const formatDate = (timestamp: { toDate: () => Date } | null | undefined) => {

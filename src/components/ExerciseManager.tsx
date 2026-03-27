@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, GripVertical, X, ChevronLe
 import { Exercise, MuscleGroup } from '../data/types';
 import { supabase } from '../supabase';
 import { ExerciseEditor } from './ExerciseEditor';
+import { showNotification } from './NotificationModal';
 
 const DEFAULT_GROUPS = [
   { id: 'upper-push' as MuscleGroup, name: 'upper-push', label: 'Upper Push', colorClass: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -100,7 +101,11 @@ export function ExerciseManager() {
       });
 
     if (error) {
-      alert('Errore nel salvare: ' + error.message);
+      showNotification({
+        type: 'alert',
+        title: 'Errore',
+        message: 'Errore nel salvare: ' + error.message,
+      });
     } else {
       // Reload data
       await loadData();
@@ -114,7 +119,11 @@ export function ExerciseManager() {
       .eq('id', exerciseId);
 
     if (error) {
-      alert('Errore nell\'eliminare: ' + error.message);
+      showNotification({
+        type: 'alert',
+        title: 'Errore',
+        message: 'Errore nell\'eliminare: ' + error.message,
+      });
     } else {
       await loadData();
     }
@@ -137,7 +146,11 @@ export function ExerciseManager() {
       .insert(newGroup);
 
     if (error) {
-      alert('Errore nel creare gruppo: ' + error.message);
+      showNotification({
+        type: 'alert',
+        title: 'Errore',
+        message: 'Errore nel creare gruppo: ' + error.message,
+      });
     } else {
       setNewGroupName('');
       setShowNewGroup(false);
@@ -146,22 +159,32 @@ export function ExerciseManager() {
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    if (!confirm('Eliminare il gruppo e tutti i suoi esercizi?')) return;
-    
-    // Delete exercises first
-    await supabase.from('exercises').delete().eq('group_id', groupId);
-    
-    // Delete group
-    const { error } = await supabase
-      .from('exercise_groups')
-      .delete()
-      .eq('id', groupId);
+    showNotification({
+      type: 'confirm',
+      title: 'Conferma eliminazione',
+      message: 'Eliminare il gruppo e tutti i suoi esercizi?',
+      confirmText: 'Elimina',
+      onConfirm: async () => {
+        // Delete exercises first
+        await supabase.from('exercises').delete().eq('group_id', groupId);
+        
+        // Delete group
+        const { error } = await supabase
+          .from('exercise_groups')
+          .delete()
+          .eq('id', groupId);
 
-    if (error) {
-      alert('Errore nell\'eliminare: ' + error.message);
-    } else {
-      await loadData();
-    }
+        if (error) {
+          showNotification({
+            type: 'alert',
+            title: 'Errore',
+            message: 'Errore nell\'eliminare: ' + error.message,
+          });
+        } else {
+          await loadData();
+        }
+      },
+    });
   };
 
   if (loading) {

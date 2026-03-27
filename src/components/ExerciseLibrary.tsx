@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Plus, Trash2, ArrowRightLeft, X, ArrowLeft, Edi
 import { supabase } from '../supabase';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 import { useAuth } from '../hooks/useAuth';
+import { showNotification } from './NotificationModal';
 
 const SUPABASE_URL = 'https://kdsstxsthxusgcizzmpr.supabase.co';
 
@@ -145,10 +146,16 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // Delete exercise
   const deleteExercise = async (exerciseId: string) => {
-    if (!confirm('Eliminare questo esercizio?')) return;
-    
-    await supabase.from('exercises').delete().eq('id', exerciseId);
-    loadExercises();
+    showNotification({
+      type: 'confirm',
+      title: 'Conferma eliminazione',
+      message: 'Eliminare questo esercizio?',
+      confirmText: 'Elimina',
+      onConfirm: async () => {
+        await supabase.from('exercises').delete().eq('id', exerciseId);
+        loadExercises();
+      },
+    });
   };
 
   // Move exercise to another group
@@ -238,7 +245,11 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
         
         if (error) {
           console.error('Error creating exercise:', error);
-          alert('Errore: ' + error.message);
+          showNotification({
+            type: 'alert',
+            title: 'Errore',
+            message: 'Errore nel creare esercizio: ' + error.message,
+          });
           return;
         }
       } else if (modalMode === 'edit' && selectedExercise) {
@@ -254,7 +265,11 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
         
         if (error) {
           console.error('Error updating exercise:', error);
-          alert('Errore: ' + error.message);
+          showNotification({
+            type: 'alert',
+            title: 'Errore',
+            message: 'Errore nell\'aggiornare esercizio: ' + error.message,
+          });
           return;
         }
       }
@@ -263,7 +278,11 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
       handleCloseModal();
     } catch (err) {
       console.error('Error saving exercise:', err);
-      alert('Errore durante il salvataggio');
+      showNotification({
+        type: 'alert',
+        title: 'Errore',
+        message: 'Errore durante il salvataggio',
+      });
     }
   };
 
@@ -534,9 +553,13 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm('Sei sicuro di voler eliminare questo gruppo?') && confirm('Conferma eliminazione gruppo?')) {
-                      deleteGroup(group.id);
-                    }
+                    showNotification({
+                      type: 'confirm',
+                      title: 'Conferma eliminazione',
+                      message: 'Eliminare il gruppo e tutti i suoi esercizi?',
+                      confirmText: 'Elimina',
+                      onConfirm: () => deleteGroup(group.id),
+                    });
                   }}
                   className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
                   title="Elimina gruppo"

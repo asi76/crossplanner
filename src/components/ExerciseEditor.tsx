@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Trash2, Save } from 'lucide-react';
 import { Exercise, MuscleGroup } from '../data/types';
+import { showNotification } from './NotificationModal';
 
 interface ExerciseEditorProps {
   exercise?: Exercise; // If provided, editing existing; else creating new
@@ -43,7 +44,11 @@ export function ExerciseEditor({
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert('Inserisci un nome per l\'esercizio');
+      showNotification({
+        type: 'alert',
+        title: 'Campo richiesto',
+        message: 'Inserisci un nome per l\'esercizio',
+      });
       return;
     }
 
@@ -65,10 +70,13 @@ export function ExerciseEditor({
 
   const handleDelete = () => {
     if (!exercise || !onDelete) return;
-    if (confirm(`Eliminare "${exercise.name}"?`)) {
-      onDelete(exercise.id);
-      onClose();
-    }
+    showNotification({
+      type: 'confirm',
+      title: 'Conferma eliminazione',
+      message: `Eliminare "${exercise.name}"?`,
+      confirmText: 'Elimina',
+      onConfirm: () => { onDelete(exercise.id); onClose(); },
+    });
   };
 
   return (
