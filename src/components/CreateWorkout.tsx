@@ -57,6 +57,28 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
   const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
 
+  // Check if there are unsaved changes
+  const initialName = editWorkout?.name || '';
+  const initialStations = editWorkout?.stations || [
+    { id: 'forza', name: 'Forza', exercises: [] },
+    { id: 'cardio1', name: 'Cardio 1', exercises: [] },
+    { id: 'cardio2', name: 'Cardio 2', exercises: [] }
+  ];
+  const hasChanges = workoutName !== initialName || JSON.stringify(workoutCategories) !== JSON.stringify(initialStations);
+
+  const handleUnsavedChanges = (action: () => void) => {
+    if (!hasChanges) {
+      action();
+      return;
+    }
+    const save = confirm('Ci sono modifiche non salvate. Vuoi salvare prima di uscire?');
+    if (save) {
+      handleSave();
+    } else {
+      action();
+    }
+  };
+
   // Load groups and exercises from Supabase
   const loadData = async () => {
     const [groupsRes, exercisesRes] = await Promise.all([
@@ -169,7 +191,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={onBack}
+              onClick={() => handleUnsavedChanges(onBack)}
               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
@@ -197,7 +219,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
               <RefreshCw className="w-5 h-5 text-white" />
             </button>
             <button
-              onClick={signOut}
+              onClick={() => handleUnsavedChanges(signOut)}
               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
               title="Logout"
             >
