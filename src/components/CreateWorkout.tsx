@@ -189,9 +189,10 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      {/* Sticky Header - taller, contains title + name + save button */}
-      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 border-b border-dark-border space-y-3 pb-3">
-        <div className="flex items-center justify-between">
+      {/* Sticky Header - contains everything above tabs */}
+      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 pb-4 border-b border-dark-border space-y-4">
+        {/* Title row */}
+        <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
@@ -230,7 +231,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </button>
           </div>
         </div>
-        {/* Workout Name + Save Button - always visible */}
+        {/* Name + Save Button */}
         <div className="flex items-center gap-4">
           <input
             type="text"
@@ -246,11 +247,31 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             Salva
           </button>
         </div>
+        {/* Category Tabs */}
+        <div className="flex gap-2">
+          {WORKOUT_CATEGORIES.map((cat) => {
+            const catData = workoutCategories.find(c => c.id === cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategoryId(cat.id)}
+                className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
+                  selectedCategoryId === cat.id
+                    ? 'bg-blue-600 text-white'
+                    : catData?.exercises.length > 0
+                      ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                      : 'bg-dark-bg text-gray-500'
+                }`}
+              >
+                {cat.name} ({catData?.exercises.length || 0})
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Rest of content - scrolls under header */}
+      {/* Rest of content - scrolls under sticky header with tabs */}
       <div className="space-y-6 mt-6">
-      {/* Category Tabs - Fixed Forza, Cardio 1, Cardio 2 */}
       <div className="flex gap-2">
         {WORKOUT_CATEGORIES.map((cat) => {
           const catData = workoutCategories.find(c => c.id === cat.id);
