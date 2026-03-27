@@ -459,6 +459,13 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowAddGroup(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium flex items-center gap-2 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="hidden sm:inline">Gruppo</span>
+            </button>
+            <button
               onClick={() => {
                 setExpandedGroups(new Set());
                 window.scrollTo({ top: 0, behavior: 'instant' });
@@ -630,14 +637,6 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
       </div>
 
       {/* Add Group Button */}
-      <button
-        onClick={() => setShowAddGroup(true)}
-        className="w-full px-6 py-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-colors"
-      >
-        <Plus className="w-5 h-5" />
-        Aggiungi Gruppo
-      </button>
-
       {/* Exercise Modal */}
       {(selectedExercise || modalMode === 'create') && (
         <ExerciseDetailModal
