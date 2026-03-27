@@ -245,26 +245,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const getExerciseById = (id: string) => exercises.find(e => e.id === id);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {/* Workout Name + Save Button Row */}
-      <div className="flex items-center gap-4">
-        <input
-          type="text"
-          value={workoutName}
-          onChange={(e) => setWorkoutName(e.target.value)}
-          placeholder="Nome del workout..."
-          className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
-        />
-        <button
-          onClick={handleSave}
-          className="w-[15%] py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
-        >
-          Salva Workout
-        </button>
-      </div>
-
-      {/* Sticky Header - below name field */}
-      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 py-4 border-b border-dark-border">
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Sticky Header - taller, contains title + name + save button */}
+      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 border-b border-dark-border space-y-3 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -304,8 +287,26 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </button>
           </div>
         </div>
+        {/* Workout Name + Save Button - always visible */}
+        <div className="flex items-center gap-4">
+          <input
+            type="text"
+            value={workoutName}
+            onChange={(e) => setWorkoutName(e.target.value)}
+            placeholder="Nome del workout..."
+            className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            onClick={handleSave}
+            className="w-[15%] py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors whitespace-nowrap"
+          >
+            Salva Workout
+          </button>
+        </div>
       </div>
 
+      {/* Rest of content - scrolls under header */}
+      <div className="space-y-6 mt-6">
       {/* Category Tabs - Fixed Forza, Cardio 1, Cardio 2 */}
       <div className="flex gap-2">
         {WORKOUT_CATEGORIES.map((cat) => {
@@ -428,6 +429,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </div>
           ))}
         </div>
+      </div>
       </div>
 
       {/* View-Only Exercise Modal */}
