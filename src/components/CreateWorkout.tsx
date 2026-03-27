@@ -102,14 +102,14 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       <div
         ref={setNodeRef}
         style={style}
-        className="bg-dark-bg rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors w-full mb-2 last:mb-0"
+        className="bg-dark-bg rounded-lg p-3 hover:bg-zinc-800/50 transition-colors w-full mb-2 last:mb-0"
       >
         <div className="flex items-start justify-between w-full">
           <div className="flex items-center gap-2">
             <button
               {...attributes}
               {...listeners}
-              className="p-1 text-zinc-500 hover:text-zinc-300 cursor-grab"
+              className="p-1 text-zinc-500 hover:text-zinc-300 cursor-grab active:cursor-grabbing"
             >
               <GripVertical className="w-4 h-4" />
             </button>
