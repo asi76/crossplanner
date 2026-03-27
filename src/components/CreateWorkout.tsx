@@ -246,23 +246,23 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
       {/* Rest of content - scrolls under sticky header with tabs */}
       <div className="space-y-6 mt-6">
-      <div className="flex gap-2">
+      {/* Hidden duplicate tabs - 2px invisible version to maintain layout */}
+      <div className="flex gap-2 h-[2px]">
         {WORKOUT_CATEGORIES.map((cat) => {
           const catData = workoutCategories.find(c => c.id === cat.id);
           return (
             <button
               key={cat.id}
               onClick={() => setSelectedCategoryId(cat.id)}
-              className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`flex-1 rounded-lg text-sm font-semibold transition-colors ${
                 selectedCategoryId === cat.id
                   ? 'bg-blue-600 text-white'
                   : catData?.exercises.length > 0
-                    ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                    ? 'bg-blue-500/20 text-blue-400'
                     : 'bg-dark-bg text-gray-500'
               }`}
-            >
-              {cat.name} ({catData?.exercises.length || 0})
-            </button>
+              style={{ height: '2px', padding: 0 }}
+            />
           );
         })}
       </div>
