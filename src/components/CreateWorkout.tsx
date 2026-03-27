@@ -65,7 +65,11 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
   // DnD sensors
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -81,7 +85,10 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const newCategories = [...workoutCategories];
+    const newCategories = workoutCategories.map(cat => ({
+      ...cat,
+      exercises: [...cat.exercises]
+    }));
     const catIndex = newCategories.findIndex(c => c.id === selectedCategoryId);
     if (catIndex === -1) return;
 
@@ -163,7 +170,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => handleRemoveExercise(selectedCategoryId, index)}
+              onClick={(e) => { e.stopPropagation(); handleRemoveExercise(selectedCategoryId, index); }}
               className="p-1.5 text-zinc-500 hover:text-red-400"
             >
               <Trash2 className="w-4 h-4" />
@@ -266,7 +273,10 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   };
 
   const handleRemoveExercise = (categoryId: string, exerciseIndex: number) => {
-    const newCategories = [...workoutCategories];
+    const newCategories = workoutCategories.map(cat => ({
+      ...cat,
+      exercises: [...cat.exercises]
+    }));
     const catIndex = newCategories.findIndex(c => c.id === categoryId);
     if (catIndex !== -1) {
       newCategories[catIndex].exercises.splice(exerciseIndex, 1);
