@@ -23,7 +23,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { CreateWorkout } from './components/CreateWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { WorkoutDisplay } from './components/WorkoutDisplay';
-import { NotificationModal, showNotification } from './components/NotificationModal';
+import { NotificationModal } from './components/NotificationModal';
 import { Workout } from './data/types';
 import { supabase } from './supabase';
 import { getGifUrl } from './data/gifMapping';
@@ -331,13 +331,9 @@ function App() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        showNotification({
-                          type: 'confirm',
-                          title: 'Elimina workout',
-                          message: 'Sei sicuro di voler eliminare questo workout?',
-                          confirmText: 'Elimina',
-                          onConfirm: () => deleteWorkout(workout.id),
-                        });
+                        if (confirm('Eliminare questo workout?')) {
+                          deleteWorkout(workout.id);
+                        }
                       }}
                       className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
                       title="Elimina"

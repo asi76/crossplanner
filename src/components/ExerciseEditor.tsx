@@ -70,13 +70,10 @@ export function ExerciseEditor({
 
   const handleDelete = () => {
     if (!exercise || !onDelete) return;
-    showNotification({
-      type: 'confirm',
-      title: 'Conferma eliminazione',
-      message: `Eliminare "${exercise.name}"?`,
-      confirmText: 'Elimina',
-      onConfirm: () => { onDelete(exercise.id); onClose(); },
-    });
+    if (confirm(`Eliminare "${exercise.name}"?`)) {
+      onDelete(exercise.id);
+      onClose();
+    }
   };
 
   return (

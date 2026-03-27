@@ -159,32 +159,21 @@ export function ExerciseManager() {
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    showNotification({
-      type: 'confirm',
-      title: 'Conferma eliminazione',
-      message: 'Eliminare il gruppo e tutti i suoi esercizi?',
-      confirmText: 'Elimina',
-      onConfirm: async () => {
-        // Delete exercises first
-        await supabase.from('exercises').delete().eq('group_id', groupId);
-        
-        // Delete group
-        const { error } = await supabase
-          .from('exercise_groups')
-          .delete()
-          .eq('id', groupId);
+    if (!confirm('Eliminare il gruppo e tutti i suoi esercizi?')) return;
+    // Delete exercises first
+    await supabase.from('exercises').delete().eq('group_id', groupId);
+    
+    // Delete group
+    const { error } = await supabase
+      .from('exercise_groups')
+      .delete()
+      .eq('id', groupId);
 
-        if (error) {
-          showNotification({
-            type: 'alert',
-            title: 'Errore',
-            message: 'Errore nell\'eliminare: ' + error.message,
-          });
-        } else {
-          await loadData();
-        }
-      },
-    });
+    if (error) {
+      alert('Errore nell\'eliminare: ' + error.message);
+    } else {
+      await loadData();
+    }
   };
 
   if (loading) {

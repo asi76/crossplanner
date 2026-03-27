@@ -146,16 +146,9 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // Delete exercise
   const deleteExercise = async (exerciseId: string) => {
-    showNotification({
-      type: 'confirm',
-      title: 'Conferma eliminazione',
-      message: 'Eliminare questo esercizio?',
-      confirmText: 'Elimina',
-      onConfirm: async () => {
-        await supabase.from('exercises').delete().eq('id', exerciseId);
-        loadExercises();
-      },
-    });
+    if (!confirm('Eliminare questo esercizio?')) return;
+    await supabase.from('exercises').delete().eq('id', exerciseId);
+    loadExercises();
   };
 
   // Move exercise to another group
@@ -553,13 +546,9 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    showNotification({
-                      type: 'confirm',
-                      title: 'Conferma eliminazione',
-                      message: 'Eliminare il gruppo e tutti i suoi esercizi?',
-                      confirmText: 'Elimina',
-                      onConfirm: () => deleteGroup(group.id),
-                    });
+                    if (confirm('Eliminare il gruppo e tutti i suoi esercizi?')) {
+                      deleteGroup(group.id);
+                    }
                   }}
                   className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
                   title="Elimina gruppo"

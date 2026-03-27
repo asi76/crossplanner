@@ -7,7 +7,6 @@ import { supabase } from '../supabase';
 import { getGifUrl } from '../data/gifMapping';
 import { Workout } from '../data/types';
 import { useAuth } from '../hooks/useAuth';
-import { showNotification } from './NotificationModal';
 
 interface ExerciseGroup {
   id: string;
