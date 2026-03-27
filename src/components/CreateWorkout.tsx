@@ -637,18 +637,12 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     </span>
                   </div>
 
-                  {/* Gruppo */}
+                  {/* Gruppo - displayed as value */}
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
-                    <select
-                      value={editingGroupId || viewingExercise.group_id || ''}
-                      onChange={(e) => handleModalGroupChange(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-800 text-white border border-zinc-600 cursor-pointer focus:outline-none focus:border-blue-500"
-                    >
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.label}</option>
-                      ))}
-                    </select>
+                    <p className="text-white font-medium">
+                      {groups.find(g => g.id === (editingGroupId || viewingExercise.group_id))?.label || 'Nessun gruppo'}
+                    </p>
                   </div>
                 </div>
               </div>
