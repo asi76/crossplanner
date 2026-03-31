@@ -1,178 +1,146 @@
 /**
- * PocketBase Service Layer for Cross2
- * Sostituisce Firebase/Servizi esistenti
+ * Cross2 API Service — Sostituisce Firebase/PocketBase
+ * Server: http://83.251.67.34:8090/api
  */
 
-import PocketBase from 'pocketbase';
-import type { RecordModel } from 'pocketbase';
+const API_URL = import.meta.env.VITE_API_URL || 'http://83.251.67.34:8090/api';
 
-const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
-export const pb = new PocketBase(PB_URL);
+let authToken: string | null = null;
+export let authUser: { id: string; email: string; displayName?: string } | null = null;
+
+function getHeaders() {
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) h['Authorization'] = `Bearer ${authToken}`;
+    return h;
+}
+
+async function api(path: string, opts: RequestInit = {}) {
+    const r = await fetch(`${API_URL}${path}`, {
+        ...opts,
+        headers: { ...getHeaders(), ...(opts.headers as Record<string,string> || {}) }
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `API ${r.status}`);
+    return d;
+}
 
 // ─── Auth ───────────────────────────────────────────────────────────────────
 
 export const login = async (email: string, password: string) => {
-  const auth = await pb.collection('users').authWithPassword(email, password);
-  return auth;
+    const d = await api('/auth', { method: 'POST', body: JSON.stringify({ email, password }) });
+    authToken = d.token;
+    authUser = d.user;
+    return d;
 };
 
-export const register = async (email: string, password: string) => {
-  await pb.collection('users').create({ email, password, passwordConfirm: password });
-  return pb.collection('users').authWithPassword(email, password);
-};
+export const register = async (email: string, password: string) => login(email, password);
+export const logout = () => { authToken = null; authUser = null; };
+export const getUser = () => authUser;
+export const isLoggedIn = () => !!authToken;
 
-export const logout = () => pb.authStore.clear();
-
-export const getUser = () => pb.authStore.model;
-export const isLoggedIn = () => pb.authStore.isValid;
-
-export const onAuthChange = (callback: (user: RecordModel | null) => void) => {
-  return pb.authStore.onChange((token, model) => callback(model));
+export const onAuthChange = (callback: (user: any) => void) => {
+    callback(authUser);
 };
 
 // ─── Exercises ───────────────────────────────────────────────────────────────
 
 export const fetchExercises = async () => {
-  return pb.collection('exercises').getFullList({ sort: 'name' });
+    const d = await api('/collections/exercises/records');
+    return d.items || [];
 };
 
-export const createExercise = async (data: {
-  name: string;
-  description?: string;
-  muscles?: string[];
-  tipo?: 'aerobico' | 'anaerobico';
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  gif_url?: string;
-}) => {
-  return pb.collection('exercises').create(data);
+export const createExercise = async (data: any) => {
+    return api('/collections/exercises/records', { method: 'POST', body: JSON.stringify(data) });
 };
 
-export const updateExercise = async (id: string, data: Partial<{
-  name: string;
-  description: string;
-  muscles: string[];
-  tipo: string;
-  difficulty: string;
-  gif_url: string;
-}>) => {
-  return pb.collection('exercises').update(id, data);
+export const updateExercise = async (id: string, data: any) => {
+    return api(`/collections/exercises/records/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 };
 
 export const deleteExercise = async (id: string) => {
-  return pb.collection('exercises').delete(id);
+    return api(`/collections/exercises/records/${id}`, { method: 'DELETE' });
 };
 
-// ─── Workouts ────────────────────────────────────────────────────────────────
+// ─── Workouts ───────────────────────────────────────────────────────────────
 
-export const fetchWorkouts = async (userId?: string) => {
-  if (userId) {
-    return pb.collection('workouts').getFullList({
-      filter: `user_id="${userId}"`,
-      sort: '-created_at'
-    });
-  }
-  return pb.collection('workouts').getFullList({ sort: '-created_at' });
+export const fetchWorkouts = async () => {
+    const d = await api('/collections/workouts/records');
+    return d.items || [];
 };
 
-export const createWorkout = async (data: { name: string; user_id: string; created_at?: string }) => {
-  return pb.collection('workouts').create(data);
+export const createWorkout = async (data: any) => {
+    return api('/collections/workouts/records', { method: 'POST', body: JSON.stringify(data) });
 };
 
-export const updateWorkout = async (id: string, data: { name: string }) => {
-  return pb.collection('workouts').update(id, data);
+export const updateWorkout = async (id: string, data: any) => {
+    return api(`/collections/workouts/records/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 };
 
 export const deleteWorkout = async (id: string) => {
-  // Delete station → station_exercises cascade
-  const stations = await pb.collection('workout_stations').getFullList({
-    filter: `workout_id="${id}"`
-  });
-  await Promise.all(stations.map(async (s: RecordModel) => {
-    const exercises = await pb.collection('station_exercises').getFullList({
-      filter: `station_id="${s.id}"`
-    });
-    await Promise.all(exercises.map((e: RecordModel) =>
-      pb.collection('station_exercises').delete(e.id)
-    ));
-    return pb.collection('workout_stations').delete(s.id);
-  }));
-  return pb.collection('workouts').delete(id);
+    return api(`/collections/workouts/records/${id}`, { method: 'DELETE' });
 };
 
-// ─── Workout Stations ─────────────────────────────────────────────────────────
+// ─── Workout Stations ──────────────────────────────────────────────────────
 
 export const fetchStations = async (workoutId: string) => {
-  return pb.collection('workout_stations').getFullList({
-    filter: `workout_id="${workoutId}"`,
-    sort: 'sort_order'
-  });
+    const d = await api(`/collections/workout_stations/records?filter=workout_id="${workoutId}"`);
+    return d.items || [];
 };
 
-export const createStation = async (data: {
-  workout_id: string;
-  category_id: string;
-  sort_order?: number;
-}) => {
-  return pb.collection('workout_stations').create(data);
+export const createStation = async (data: any) => {
+    return api('/collections/workout_stations/records', { method: 'POST', body: JSON.stringify(data) });
 };
 
 export const deleteStations = async (workoutId: string) => {
-  const stations = await pb.collection('workout_stations').getFullList({
-    filter: `workout_id="${workoutId}"`
-  });
-  await Promise.all(stations.map(async (s: RecordModel) => {
-    const exercises = await pb.collection('station_exercises').getFullList({
-      filter: `station_id="${s.id}"`
-    });
-    await Promise.all(exercises.map((e: RecordModel) =>
-      pb.collection('station_exercises').delete(e.id)
-    ));
-    return pb.collection('workout_stations').delete(s.id);
-  }));
+    const stations = await fetchStations(workoutId);
+    for (const s of stations) {
+        await deleteStationExercises(s.id);
+        await api(`/collections/workout_stations/records/${s.id}`, { method: 'DELETE' });
+    }
 };
 
-// ─── Station Exercises ────────────────────────────────────────────────────────
+// ─── Station Exercises ─────────────────────────────────────────────────────
 
 export const fetchStationExercises = async (stationId: string) => {
-  return pb.collection('station_exercises').getFullList({
-    filter: `station_id="${stationId}"`,
-    sort: 'sort_order'
-  });
+    const d = await api(`/collections/station_exercises/records?filter=station_id="${stationId}"`);
+    return d.items || [];
 };
 
-export const createStationExercise = async (data: {
-  station_id: string;
-  exercise_id: string;
-  exercise_name?: string;
-  sort_order?: number;
-}) => {
-  return pb.collection('station_exercises').create(data);
+export const createStationExercise = async (data: any) => {
+    return api('/collections/station_exercises/records', { method: 'POST', body: JSON.stringify(data) });
 };
 
 export const deleteStationExercises = async (stationId: string) => {
-  const exercises = await pb.collection('station_exercises').getFullList({
-    filter: `station_id="${stationId}"`
-  });
-  await Promise.all(exercises.map((e: RecordModel) =>
-    pb.collection('station_exercises').delete(e.id)
-  ));
+    const exs = await fetchStationExercises(stationId);
+    for (const e of exs) {
+        await api(`/collections/station_exercises/records/${e.id}`, { method: 'DELETE' });
+    }
 };
 
-// ─── User Profiles ────────────────────────────────────────────────────────────
+// ─── GIF Mappings ──────────────────────────────────────────────────────────
+
+export const getGifMappings = async () => {
+    const d = await api('/collections/gif_mappings/records');
+    return d.items || [];
+};
+
+export const setGifUrl = async (exerciseId: string, gifUrl: string) => {
+    return api('/collections/gif_mappings/records', {
+        method: 'POST',
+        body: JSON.stringify({ exercise_id: exerciseId, gif_url: gifUrl })
+    });
+};
+
+// ─── User Profiles ──────────────────────────────────────────────────────────
 
 export const getProfile = async (userId: string) => {
-  const records = await pb.collection('user_profiles').getFullList({
-    filter: `user_id="${userId}"`
-  });
-  return records[0] || null;
+    const d = await api('/collections/user_profiles/records');
+    return (d.items || []).find((p: any) => p.user_id === userId) || null;
 };
 
 export const upsertProfile = async (userId: string, displayName: string, role = 'enabled') => {
-  const existing = await pb.collection('user_profiles').getFullList({
-    filter: `user_id="${userId}"`
-  });
-  if (existing.length > 0) {
-    return pb.collection('user_profiles').update(existing[0].id, { display_name: displayName, role });
-  }
-  return pb.collection('user_profiles').create({ user_id: userId, display_name: displayName, role });
+    return api('/collections/user_profiles/records', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, display_name: displayName, role })
+    });
 };
