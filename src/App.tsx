@@ -25,7 +25,7 @@ import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { WorkoutDisplay } from './components/WorkoutDisplay';
 import { NotificationModal } from './components/NotificationModal';
 import { Workout } from './data/types';
-import { supabase } from './supabase';
+import { fetchExercises } from './pbService';
 import { getGifUrl } from './data/gifMapping';
 
 type View = 'home' | 'create' | 'library' | 'workout' | 'admin';
@@ -62,8 +62,8 @@ function App() {
   // Load all exercises for display (muscles, tipo, difficulty)
   useEffect(() => {
     async function loadExercises() {
-      const { data } = await supabase.from('exercises').select('*');
-      if (data) setAllExercises(data);
+      const records = await fetchExercises();
+      setAllExercises(records as any[]);
     }
     loadExercises();
   }, []);

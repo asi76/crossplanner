@@ -1,129 +1,92 @@
-import { useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
-import { 
-  onAuthStateChanged, 
-  signInWithGoogle, 
-  logOut, 
-  getUserRole, 
-  createPendingUser,
-  ADMIN_EMAIL,
-  auth,
-  db 
-} from '../firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { login, logout, getUser, onAuthChange, upsertProfile, pb } from '../pbService';
 
 export type UserRole = 'admin' | 'enabled' | 'pending' | null;
 
+interface PBUser {
+  id: string;
+  email: string;
+  name?: string;
+  displayName?: string;
+  role?: 'admin' | 'enabled' | 'pending' | 'user';
+}
+
 interface UseAuthReturn {
-  user: User | null;
+  user: PBUser | null;
   role: UserRole;
   loading: boolean;
-  signIn: (requestEmail?: string, requestMessage?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
 }
 
+const ADMIN_EMAIL = 'jarvis.vong@gmail.com';
+
 export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<PBUser | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRole = async (user: User | null) => {
-    if (!user) {
-      setRole(null);
-      setLoading(false);
-      return;
-    }
-    
-    // Admin always has access
-    if (user.email === ADMIN_EMAIL) {
+  const loadRole = useCallback(async (pbUser: PBUser) => {
+    if (pbUser.email === ADMIN_EMAIL) {
       setRole('admin');
-      setLoading(false);
       return;
     }
-    
     try {
-      const userRole = await getUserRole(user.email!);
-      
-      if (userRole === 'enabled' || userRole === 'admin') {
-        setRole(userRole);
+      const profile = await pb.collection('user_profiles').getFullList({
+        filter: `user_id="${pbUser.id}"`
+      });
+      if (profile.length > 0) {
+        setRole((profile[0] as any).role || 'enabled');
       } else {
-        // User not enabled - set to pending
         setRole('pending');
       }
-    } catch (error) {
-      console.error('Error fetching role:', error);
+    } catch {
       setRole('pending');
     }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      await fetchRole(firebaseUser);
-    });
-
-    return () => unsubscribe();
   }, []);
 
-  const signIn = async (requestEmail?: string, requestMessage?: string) => {
-    try {
-      // If email and message provided (Request Access flow), save pending request to Firestore BEFORE auth
-      if (requestEmail && requestMessage) {
-        try {
-          const userRef = doc(db, 'users', requestEmail);
-          await setDoc(userRef, {
-            role: 'pending',
-            requestedAt: serverTimestamp(),
-            email: requestEmail,
-            message: requestMessage,
-          }, { merge: true });
-        } catch (e) {
-          console.error('Error saving pending request:', e);
-        }
-      }
-      
-      const firebaseUser = await signInWithGoogle();
-      setUser(firebaseUser);
-      
-      // Admin always has access
-      if (firebaseUser.email === ADMIN_EMAIL) {
-        setRole('admin');
-        return;
-      }
-      
-      // Check if user exists in Firestore
-      const userRole = await getUserRole(firebaseUser.email!);
-      
-      if (userRole === 'enabled' || userRole === 'admin') {
-        setRole(userRole);
+  useEffect(() => {
+    const currentUser = getUser() as PBUser | null;
+    if (currentUser) {
+      setUser(currentUser);
+      loadRole(currentUser).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+
+    const unsub = onAuthChange(async (model) => {
+      const u = model as PBUser | null;
+      setUser(u);
+      if (u) {
+        await loadRole(u);
+        await upsertProfile(u.id, u.email || 'User');
       } else {
-        // New user - create pending request (message was already saved above if provided)
-        try {
-          await createPendingUser(firebaseUser, requestMessage);
-        } catch (e) {
-          console.error('Error creating pending user:', e);
-        }
-        setRole('pending');
+        setRole(null);
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
+    });
+
+    return unsub;
+  }, [loadRole]);
+
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await login(email, password);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signOut = async () => {
-    await logOut();
+  const handleSignOut = async () => {
+    logout();
     setUser(null);
     setRole(null);
   };
 
   const refreshRole = async () => {
-    if (user) {
-      await fetchRole(user);
-    }
+    if (user) await loadRole(user);
   };
 
-  return { user, role, loading, signIn, signOut, refreshRole };
+  return { user, role, loading, signIn, signOut: handleSignOut, refreshRole };
 };

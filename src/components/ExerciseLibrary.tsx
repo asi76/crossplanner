@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2, ArrowRightLeft, X, ArrowLeft, Edit3, RefreshCw, LogOut } from 'lucide-react';
-import { supabase } from '../supabase';
+import { pb } from '../pbService';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 import { useAuth } from '../hooks/useAuth';
 import { showNotification } from './NotificationModal';
-
-const SUPABASE_URL = 'https://kdsstxsthxusgcizzmpr.supabase.co';
 
 interface ExerciseGroup {
   id: string;
@@ -49,26 +47,39 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   const [editGroupName, setEditGroupName] = useState('');
   const [editGroupColor, setEditGroupColor] = useState('blue');
 
-  // Load groups from Supabase
   const loadGroups = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('exercise_groups')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    
-    if (!error && data) {
-      setGroups(data);
+    try {
+      const records = await pb.collection('exercise_groups').getFullList({ sort: 'sort_order' });
+      const mapped: ExerciseGroup[] = records.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        label: r.name,
+        color_class: 'blue',
+        sort_order: r.sort_order || 0,
+      }));
+      setGroups(mapped);
+    } catch (err) {
+      console.error('Error loading groups:', err);
     }
   }, []);
 
-  // Load exercises from Supabase
   const loadExercises = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('exercises')
-      .select('*');
-    
-    if (!error && data) {
-      setExercises(data);
+    try {
+      const records = await pb.collection('exercises').getFullList({ sort: 'name' });
+      const mapped: Exercise[] = records.map((r: any) => ({
+        id: r.id,
+        group_id: r.group_id || '',
+        name: r.name,
+        muscles: r.muscles || [],
+        reps: r.reps || null,
+        duration: r.duration || null,
+        difficulty: r.difficulty || 'beginner',
+        tipo: r.tipo,
+        description: r.description || '',
+      }));
+      setExercises(mapped);
+    } catch (err) {
+      console.error('Error loading exercises:', err);
     }
   }, []);
 
@@ -77,601 +88,246 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     loadExercises();
   }, [loadGroups, loadExercises]);
 
-  // Available colors for groups
-  const groupColors = [
-    { id: 'white', name: 'Bianco', class: 'bg-white/20 text-white border-white/30' },
-    { id: 'blue', name: 'Blu', class: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-    { id: 'cyan', name: 'Cyan', class: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
-    { id: 'green', name: 'Verde', class: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    { id: 'lime', name: 'Lime', class: 'bg-lime-500/20 text-lime-400 border-lime-500/30' },
-    { id: 'purple', name: 'Viola', class: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-    { id: 'pink', name: 'Rosa', class: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
-    { id: 'orange', name: 'Arancione', class: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-    { id: 'red', name: 'Rosso', class: 'bg-red-500/20 text-red-400 border-red-500/30' },
-    { id: 'yellow', name: 'Giallo', class: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    { id: 'gray', name: 'Grigio', class: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-    { id: 'neon-green', name: 'Neon Verde', class: 'bg-green-400/30 text-green-300 border-green-400/50' },
-    { id: 'neon-blue', name: 'Neon Azzurro', class: 'bg-blue-400/30 text-blue-300 border-blue-400/50' },
-    { id: 'neon-pink', name: 'Neon Rosa', class: 'bg-pink-400/30 text-pink-300 border-pink-400/50' },
-  ];
-
-  // Get color class by id
-  const getColorClass = (colorId: string) => {
-    return groupColors.find(c => c.id === colorId)?.class || groupColors[0].class;
-  };
-
-  // Open edit group modal
-  const handleEditGroup = (group: ExerciseGroup) => {
-    setEditingGroup(group);
-    setEditGroupName(group.label);
-    // Extract color id from group.color_class
-    const found = groupColors.find(c => group.color_class.includes(c.id));
-    setEditGroupColor(found?.id || 'blue');
-  };
-
-  // Save edited group
-  const saveEditGroup = async () => {
-    if (!editingGroup || !editGroupName.trim()) return;
-    
-    await supabase
-      .from('exercise_groups')
-      .update({
-        name: editGroupName,
-        label: editGroupName,
-        color_class: getColorClass(editGroupColor)
-      })
-      .eq('id', editingGroup.id);
-    
-    setEditingGroup(null);
-    loadGroups();
-  };
-
-  // Get exercises for a specific group (sorted alphabetically)
-  const getExercisesByGroup = (groupId: string): Exercise[] => {
-    return exercises
-      .filter(e => e.group_id === groupId)
-      .sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  // Toggle group expansion
-  const toggleGroup = (groupId: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
-    } else {
-      newExpanded.add(groupId);
-    }
-    setExpandedGroups(newExpanded);
-  };
-
-  // Delete exercise
-  const deleteExercise = async (exerciseId: string) => {
-    if (!confirm('Eliminare questo esercizio?')) return;
-    await supabase.from('exercises').delete().eq('id', exerciseId);
-    loadExercises();
-  };
-
-  // Move exercise to another group
-  const moveExercise = async (exerciseId: string, newGroupId: string) => {
-    await supabase.from('exercises').update({ group_id: newGroupId }).eq('id', exerciseId);
-    setShowGroupSelector(null);
-    setMoveExerciseId(null);
-    loadExercises();
-  };
-
-  // Add new exercise
-  const handleAddExercise = (groupId: string) => {
-    setCreateGroupId(groupId);
-    setSelectedExercise(null);
-    setModalMode('create');
-  };
-
-  // Delete a group
-  const deleteGroup = async (groupId: string) => {
-    // First delete all exercises in the group
-    await supabase.from('exercises').delete().eq('group_id', groupId);
-    // Then delete the group
-    await supabase.from('exercise_groups').delete().eq('id', groupId);
-    loadGroups();
-    loadExercises();
-  };
-
-  // Edit exercise - load GIF too
-  const handleEditExercise = async (exercise: Exercise) => {
-    setSelectedExercise(exercise);
-    setCreateGroupId(null);
-    setModalMode('edit');
-    // Load GIF
-    try {
-      const gifUrl = await getGifUrl(exercise.id);
-      setSelectedExerciseGif(gifUrl);
-    } catch {
-      setSelectedExerciseGif(null);
-    }
-  };
-
-  // Called when user clicks Modifica in the modal
-  const handleOpenEdit = () => {
-    setModalMode('edit');
-  };
-
-  // View exercise - load GIF too
-  const handleViewExercise = async (exercise: Exercise) => {
-    setSelectedExerciseGif(null); // Reset first
-    setSelectedExercise(exercise);
-    setCreateGroupId(null);
-    setModalMode('view');
-    // Load GIF
-    try {
-      const gifUrl = await getGifUrl(exercise.id);
-      setSelectedExerciseGif(gifUrl);
-    } catch {
-      setSelectedExerciseGif(null);
-    }
-  };
-
-  // Close modal - reload exercises to show updated data and clear GIF
-  const handleCloseModal = () => {
-    setSelectedExercise(null);
-    setSelectedExerciseGif(null);
-    setCreateGroupId(null);
-    setModalMode('view');
-    loadExercises();
-  };
-
-  // Save exercise (create or update)
-  const handleSaveExercise = async (exerciseData: Partial<Exercise>) => {
-    try {
-      if (modalMode === 'create' && createGroupId) {
-        const newId = `${createGroupId}-${Date.now()}`;
-        const { error } = await supabase.from('exercises').insert({
-          id: newId,
-          group_id: createGroupId,
-          name: exerciseData.name || '',
-          muscles: exerciseData.muscles || [],
-          reps: exerciseData.reps || null,
-          duration: exerciseData.duration || null,
-          difficulty: exerciseData.difficulty || 'intermediate',
-          tipo: exerciseData.tipo || 'anaerobico',
-          description: exerciseData.description || ''
-        });
-        
-        if (error) {
-          console.error('Error creating exercise:', error);
-          showNotification({
-            type: 'alert',
-            title: 'Errore',
-            message: 'Errore nel creare esercizio: ' + error.message,
-          });
-          return;
-        }
-      } else if (modalMode === 'edit' && selectedExercise) {
-        const { error } = await supabase.from('exercises').update({
-          name: exerciseData.name,
-          muscles: exerciseData.muscles,
-          reps: exerciseData.reps,
-          duration: exerciseData.duration,
-          difficulty: exerciseData.difficulty,
-          tipo: exerciseData.tipo,
-          description: exerciseData.description
-        }).eq('id', selectedExercise.id);
-        
-        if (error) {
-          console.error('Error updating exercise:', error);
-          showNotification({
-            type: 'alert',
-            title: 'Errore',
-            message: 'Errore nell\'aggiornare esercizio: ' + error.message,
-          });
-          return;
-        }
-      }
-      
-      loadExercises();
-      handleCloseModal();
-    } catch (err) {
-      console.error('Error saving exercise:', err);
-      showNotification({
-        type: 'alert',
-        title: 'Errore',
-        message: 'Errore durante il salvataggio',
-      });
-    }
-  };
-
-  // Add new group
   const addGroup = async () => {
     if (!newGroupName.trim()) return;
-    
-    const id = newGroupName.toLowerCase().replace(/\s+/g, '-');
-    await supabase.from('exercise_groups').insert({
-      id,
-      name: newGroupName,
-      label: newGroupName,
-      color_class: getColorClass(newGroupColor),
-      sort_order: groups.length + 1
-    });
-    setNewGroupName('');
-    setNewGroupColor('blue');
-    setShowAddGroup(false);
-    loadGroups();
+    try {
+      const maxOrder = groups.reduce((max, g) => Math.max(max, g.sort_order || 0), 0);
+      await pb.collection('exercise_groups').create({
+        name: newGroupName,
+        sort_order: maxOrder + 1,
+      });
+      setNewGroupName('');
+      setShowAddGroup(false);
+      loadGroups();
+    } catch (err) {
+      console.error('Error adding group:', err);
+    }
   };
 
-  // Group selector modal
-  const renderGroupSelector = () => {
-    if (!showGroupSelector) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-        <div className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-            <h2 className="text-lg font-bold text-white">Sposta esercizio</h2>
-            <button
-              onClick={() => {
-                setShowGroupSelector(null);
-                setMoveExerciseId(null);
-              }}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
-          </div>
-          <div className="p-4 space-y-2">
-            {groups.map(group => (
-              <button
-                key={group.id}
-                onClick={() => moveExerciseId && moveExercise(moveExerciseId, group.id)}
-                className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-left transition-colors"
-              >
-                <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
-                  {group.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  const deleteGroup = async (groupId: string) => {
+    if (!confirm('Eliminare questo gruppo?')) return;
+    try {
+      await pb.collection('exercise_groups').delete(groupId);
+      setGroups(prev => prev.filter(g => g.id !== groupId));
+    } catch (err) {
+      console.error('Error deleting group:', err);
+    }
   };
 
-  // Add group modal
-  const renderAddGroupModal = () => {
-    if (!showAddGroup) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-        <div className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-            <h2 className="text-lg font-bold text-white">Aggiungi Gruppo</h2>
-            <button
-              onClick={() => {
-                setShowAddGroup(false);
-                setNewGroupName('');
-              }}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
-          </div>
-          <div className="p-6 space-y-4">
-            <input
-              type="text"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              placeholder="Nome del gruppo"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
-              onKeyDown={(e) => e.key === 'Enter' && addGroup()}
-            />
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-2">Colore</label>
-              <div className="flex flex-wrap gap-2">
-                {groupColors.map(color => (
-                  <button
-                    key={color.id}
-                    onClick={() => setNewGroupColor(color.id)}
-                    className={`px-3 py-1.5 rounded text-sm border ${color.class} ${
-                      newGroupColor === color.id ? 'ring-2 ring-white' : ''
-                    }`}
-                  >
-                    {color.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={addGroup}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
-            >
-              Salva
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const updateGroup = async (groupId: string) => {
+    try {
+      await pb.collection('exercise_groups').update(groupId, { name: editGroupName });
+      setEditingGroup(null);
+      loadGroups();
+    } catch (err) {
+      console.error('Error updating group:', err);
+    }
   };
 
-  // Edit Group Modal
-  const renderEditGroupModal = () => {
-    if (!editingGroup) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-        <div className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-            <h2 className="text-lg font-bold text-white">Modifica Gruppo</h2>
-            <button
-              onClick={() => setEditingGroup(null)}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
-          </div>
-          <div className="p-6 space-y-4">
-            <input
-              type="text"
-              value={editGroupName}
-              onChange={(e) => setEditGroupName(e.target.value)}
-              placeholder="Nome del gruppo"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
-              onKeyDown={(e) => e.key === 'Enter' && saveEditGroup()}
-            />
-            <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-2">Colore</label>
-              <div className="flex flex-wrap gap-2">
-                {groupColors.map(color => (
-                  <button
-                    key={color.id}
-                    onClick={() => setEditGroupColor(color.id)}
-                    className={`px-3 py-1.5 rounded text-sm border ${color.class} ${
-                      editGroupColor === color.id ? 'ring-2 ring-white' : ''
-                    }`}
-                  >
-                    {color.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={saveEditGroup}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
-            >
-              Salva
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const addExercise = async (groupId: string) => {
+    try {
+      const newEx = await pb.collection('exercises').create({
+        name: 'Nuovo Esercizio',
+        group_id: groupId,
+        muscles: [],
+        difficulty: 'beginner',
+        description: '',
+      });
+      const mapped: Exercise = {
+        id: (newEx as any).id,
+        group_id: groupId,
+        name: 'Nuovo Esercizio',
+        muscles: [],
+        reps: null,
+        duration: null,
+        difficulty: 'beginner',
+        description: '',
+      };
+      setExercises(prev => [...prev, mapped]);
+      setSelectedExercise(mapped);
+      setModalMode('edit');
+    } catch (err) {
+      console.error('Error adding exercise:', err);
+    }
   };
 
-  // Default exercise for create mode
-  const defaultExercise: Exercise = {
-    id: '',
-    group_id: createGroupId || '',
-    name: '',
-    muscles: [],
-    reps: null,
-    duration: null,
-    difficulty: 'intermediate',
-    description: ''
+  const updateExercise = async (exerciseId: string, data: Partial<Exercise>) => {
+    try {
+      await pb.collection('exercises').update(exerciseId, {
+        name: data.name,
+        description: data.description,
+        muscles: data.muscles,
+        tipo: data.tipo,
+        difficulty: data.difficulty,
+        reps: data.reps,
+        duration: data.duration,
+      });
+      setExercises(prev => prev.map(e => e.id === exerciseId ? { ...e, ...data } : e));
+    } catch (err) {
+      console.error('Error updating exercise:', err);
+    }
   };
+
+  const deleteExercise = async (exerciseId: string) => {
+    try {
+      await pb.collection('exercises').delete(exerciseId);
+      setExercises(prev => prev.filter(e => e.id !== exerciseId));
+    } catch (err) {
+      console.error('Error deleting exercise:', err);
+    }
+  };
+
+  const moveExercise = async (exerciseId: string, newGroupId: string) => {
+    try {
+      await pb.collection('exercises').update(exerciseId, { group_id: newGroupId });
+      setExercises(prev => prev.map(e => e.id === exerciseId ? { ...e, group_id: newGroupId } : e));
+      setShowGroupSelector(null);
+    } catch (err) {
+      console.error('Error moving exercise:', err);
+    }
+  };
+
+  const handleSaveExercise = async (exercise: Exercise) => {
+    await updateExercise(exercise.id, exercise);
+    setSelectedExercise(null);
+  };
+
+  const COLORS = ['blue', 'red', 'green', 'yellow', 'purple', 'pink'];
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 py-4 border-b border-dark-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-dark-bg">
+      {/* Header */}
+      <div className="bg-dark-card border-b border-dark-border p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="text-gray-400 hover:text-white">
+              <ArrowLeft className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-bold text-white">Libreria Esercizi</h2>
+            <h1 className="text-xl font-bold text-white">Libreria Esercizi</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAddGroup(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium flex items-center gap-2 transition-colors whitespace-nowrap"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Gruppo</span>
+            <button onClick={() => { loadGroups(); loadExercises(); }} className="text-gray-400 hover:text-white p-2">
+              <RefreshCw className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => {
-                setExpandedGroups(new Set());
-                window.scrollTo({ top: 0, behavior: 'instant' });
-              }}
-              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-              title="Comprimi tutto"
-            >
-              <ChevronUp className="w-5 h-5 text-white" />
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw className="w-5 h-5 text-white" />
-            </button>
-            <button
-              onClick={signOut}
-              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-              title="Logout"
-            >
-              <LogOut className="w-5 h-5 text-white" />
+            <button onClick={() => signOut()} className="text-gray-400 hover:text-white p-2">
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddGroup(true)}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg"
+          >
+            + Gruppo
+          </button>
+        </div>
       </div>
 
-      {/* Groups List */}
-      <div className="space-y-3">
+      {/* Groups */}
+      <div className="p-4 space-y-3">
         {groups.map(group => (
-          <div key={group.id} className="bg-zinc-900 rounded-xl border border-zinc-800">
-            {/* Group Header */}
+          <div key={group.id} className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
             <button
-              onClick={() => toggleGroup(group.id)}
-              className="w-full px-5 py-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between"
+              onClick={() => {
+                setExpandedGroups(prev => {
+                  const next = new Set(prev);
+                  if (next.has(group.id)) next.delete(group.id);
+                  else next.add(group.id);
+                  return next;
+                });
+              }}
             >
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
-                  {group.label}
-                </span>
-                <span className="text-base text-zinc-400">
-                  {getExercisesByGroup(group.id).length} esercizi
-                </span>
-              </div>
+              <span className="text-white font-medium">{group.label}</span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddExercise(group.id);
-                  }}
-                  className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors"
-                  title="Aggiungi esercizio"
+                  onClick={(e) => { e.stopPropagation(); addExercise(group.id); }}
+                  className="text-blue-400 hover:text-blue-300 p-1"
                 >
-                  <Plus className="w-4 h-4 text-white" />
+                  <Plus className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditGroup(group);
-                  }}
-                  className="p-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
-                  title="Modifica gruppo"
-                >
-                  <Edit3 className="w-4 h-4 text-white" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Eliminare il gruppo e tutti i suoi esercizi?')) {
-                      deleteGroup(group.id);
-                    }
-                  }}
-                  className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
-                  title="Elimina gruppo"
-                >
-                  <Trash2 className="w-4 h-4 text-red-400" />
-                </button>
-                {expandedGroups.has(group.id) ? (
-                  <ChevronUp className="w-5 h-5 text-zinc-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-zinc-400" />
-                )}
+                {expandedGroups.has(group.id) ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
               </div>
             </button>
 
-            {/* Expanded Content */}
             {expandedGroups.has(group.id) && (
-              <div className="border-t border-zinc-800 max-h-96 overflow-y-auto scrollbar-dark">
-                {getExercisesByGroup(group.id).length === 0 ? (
-                  <div className="px-5 py-8 text-center text-zinc-500">
-                    Nessun esercizio in questo gruppo
-                  </div>
-                ) : (
-                  getExercisesByGroup(group.id).map(exercise => (
-                    <div
-                      key={exercise.id}
-                      className="px-5 py-4 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <button
-                              onClick={() => handleViewExercise(exercise)}
-                              className="text-base font-medium text-white hover:text-blue-400 hover:underline cursor-pointer transition-colors text-left"
-                            >
-                              {exercise.name}
-                            </button>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                              exercise.tipo === 'aerobico' 
-                                ? 'bg-blue-500/20 text-blue-400' 
-                                : 'bg-orange-500/20 text-orange-400'
-                            }`}>
-                              {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <div className="flex flex-wrap gap-1">
-                              {exercise.muscles.map((muscle, idx) => (
-                                <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white border border-white/30">{muscle}</span>
-                              ))}
-                            </div>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                              exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                              exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-red-500/20 text-red-400'
-                            }`}>
-                              {exercise.difficulty === 'beginner' ? 'Principiante' :
-                               exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              setMoveExerciseId(exercise.id);
-                              setShowGroupSelector(exercise.id);
-                            }}
-                            className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-                            title="Sposta"
-                          >
-                            <ArrowRightLeft className="w-4 h-4 text-zinc-400" />
-                          </button>
-                          <button
-                            onClick={() => deleteExercise(exercise.id)}
-                            className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
-                            title="Elimina"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </button>
+              <div className="border-t border-dark-border">
+                <div className="p-4 space-y-2">
+                  {exercises.filter(e => e.group_id === group.id).map(exercise => (
+                    <div key={exercise.id} className="flex items-center justify-between p-3 bg-dark-bg rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {exercise.gif_url && <img src={exercise.gif_url} className="w-8 h-8 object-contain" alt="" />}
+                        <div>
+                          <p className="text-white text-sm">{exercise.name}</p>
+                          <p className="text-gray-500 text-xs">{exercise.muscles?.join(', ')}</p>
                         </div>
                       </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setSelectedExercise(exercise); setModalMode('edit'); }} className="text-gray-400 hover:text-white p-1">
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteExercise(exercise.id)} className="text-red-400 hover:text-red-300 p-1">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => { setMoveExerciseId(exercise.id); setShowGroupSelector(group.id); }} className="text-gray-400 hover:text-white p-1">
+                          <ArrowRightLeft className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  ))
-                )}
-                {/* Add exercise button at bottom of group */}
-                <div className="px-5 py-3 border-t border-zinc-800/50">
-                  <button
-                    onClick={() => handleAddExercise(group.id)}
-                    className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Aggiungi esercizio
-                  </button>
+                  ))}
+                  {exercises.filter(e => e.group_id === group.id).length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-2">Nessun esercizio</p>
+                  )}
                 </div>
               </div>
             )}
           </div>
         ))}
+
+        {groups.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Nessun gruppo. Clicca "+ Gruppo" per iniziare.</p>
+          </div>
+        )}
       </div>
 
-      {/* Add Group Button */}
-      {/* Exercise Modal */}
-      {(selectedExercise || modalMode === 'create') && (
-        <ExerciseDetailModal
-          exercise={modalMode === 'create' ? defaultExercise : selectedExercise!}
-          mode={modalMode}
-          gifUrl={selectedExerciseGif}
-          onClose={handleCloseModal}
-          onSave={handleSaveExercise}
-          onEdit={handleOpenEdit}
-          onGifUpdated={(id, url) => setSelectedExerciseGif(url)}
-          groups={groups}
-          onMoveGroup={(id, groupId) => moveExercise(id, groupId)}
-        />
+      {/* Add Group Modal */}
+      {showAddGroup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-card border border-dark-border rounded-xl p-6 w-full max-w-sm">
+            <h2 className="text-white font-bold mb-4">Nuovo Gruppo</h2>
+            <input
+              type="text"
+              value={newGroupName}
+              onChange={e => setNewGroupName(e.target.value)}
+              placeholder="Nome gruppo"
+              className="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-white mb-4"
+              onKeyDown={e => e.key === 'Enter' && addGroup()}
+            />
+            <div className="flex gap-2 mb-4">
+              {COLORS.map(c => (
+                <button key={c} onClick={() => setNewGroupColor(c)} className={`w-6 h-6 rounded bg-${c}-500 border-2 ${newGroupColor === c ? 'border-white' : 'border-transparent'}`} />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowAddGroup(false)} className="flex-1 px-4 py-2 text-gray-400 hover:text-white">Annulla</button>
+              <button onClick={addGroup} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Crea</button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Group Selector Modal */}
-      {renderGroupSelector()}
-
-      {/* Add Group Modal */}
-      {renderAddGroupModal()}
-
-      {/* Edit Group Modal */}
-      {renderEditGroupModal()}
+      {/* Exercise Detail Modal */}
+      {selectedExercise && (
+        <ExerciseDetailModal
+          exercise={selectedExercise}
+          mode={modalMode}
+          onClose={() => setSelectedExercise(null)}
+          onSave={handleSaveExercise}
+        />
+      )}
     </div>
   );
 }
