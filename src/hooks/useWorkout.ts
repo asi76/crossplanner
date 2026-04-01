@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Workout, Station } from '../data/types';
-import { getWorkout, createWorkout, updateWorkout, deleteWorkout as deleteWorkoutFromDb, subscribeToWorkouts } from '../pbService';
+import { getWorkouts, getWorkout, createWorkout, updateWorkout, deleteWorkout as deleteWorkoutFromDb, subscribeToWorkouts } from '../pbService';
 
 export const useWorkout = () => {
   const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
