@@ -174,8 +174,8 @@ export const uploadGif = async (filename: string, blob: Blob): Promise<string> =
   // Upload to media collection
   const record = await pb.collection('media').create(formData);
   
-  // Return the file URL
-  return `${PB_URL}/files/media/${record.id}/${record.file}`;
+  // Return the file URL (PocketBase v0.36 uses /api/files/ path)
+  return `${PB_URL}/api/files/media/${record.id}/${record.file}`;
 };
 
 export const getGifUrl = (filename: string) => {
