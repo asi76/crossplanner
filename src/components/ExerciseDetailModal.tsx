@@ -89,8 +89,8 @@ export function ExerciseDetailModal({
   useEffect(() => {
     if (!gifUrl && onGifUpdated && exercise?.id) {
       getGifMapping(exercise.id).then(mapping => {
-        if (mapping?.gif_url && onGifUpdated) {
-          onGifUpdated(exercise.id, mapping.gif_url);
+        if (mapping?.gifUrl && onGifUpdated) {
+          onGifUpdated(exercise.id, mapping.gifUrl);
         }
       }).catch(() => {});
     }
@@ -488,7 +488,7 @@ export function ExerciseDetailModal({
                       className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                     >
                       {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.label}</option>
+                        <option key={g.id} value={g.id}>{g.name}</option>
                       ))}
                     </select>
                   </div>
@@ -593,7 +593,7 @@ export function ExerciseDetailModal({
                     className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                   >
                     {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.label}</option>
+                      <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
                   </select>
                 </div>
@@ -682,7 +682,7 @@ export function ExerciseDetailModal({
                 <div>
                   <h3 className="text-base font-medium text-zinc-400 mb-2">Gruppo</h3>
                   <span className={`px-3 py-1 rounded-full text-base font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20`}>
-                    {groups.find(g => g.name.toLowerCase().replace(/ /g, '-') === exercise.muscleGroup)?.label || 'Nessun gruppo'}
+                    {groups.find(g => g.name.toLowerCase().replace(/ /g, '-') === exercise.muscleGroup)?.name || 'Nessun gruppo'}
                   </span>
                 </div>
                 {/* Tags */}
@@ -784,7 +784,7 @@ export function ExerciseDetailModal({
                   className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-left transition-colors"
                 >
                   <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
-                    {group.label}
+                    {group.name}
                   </span>
                 </button>
               ))}
