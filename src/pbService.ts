@@ -35,7 +35,7 @@ export const updateGroup = async (id: string, data: any) => {
 export const getExercises = async (groupId?: string) => {
   if (groupId) {
     const records = await pb.collection('exercises').getFullList({
-      filter: `group_id = '${groupId}'`,
+      filter: `muscleGroup = '${groupId}'`,
     });
     return records.map(recordToObj);
   }

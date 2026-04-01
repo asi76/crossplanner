@@ -20,7 +20,7 @@ interface ExerciseGroup {
 
 interface Exercise {
   id: string;
-  group_id: string;
+  muscleGroup: string;
   name: string;
   muscles: string[];
   reps: number | null;
@@ -213,7 +213,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   // State for create exercise form - persists across renders
   const [createExerciseForm, setCreateExerciseForm] = useState<Exercise>({
     id: '',
-    group_id: '',
+    muscleGroup: '',
     name: '',
     muscles: [],
     reps: null,
@@ -319,9 +319,13 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   };
 
   // Get exercises for a specific group (sorted alphabetically)
+  // Groups use 'name' (e.g. "Upper Push") and exercises use 'muscleGroup' (e.g. "upper-push")
   const getExercisesByGroup = (groupId: string): Exercise[] => {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return [];
+    const muscleGroupValue = group.name.toLowerCase().replace(/ /g, '-');
     return exercises
-      .filter(e => e.group_id === groupId)
+      .filter(e => e.muscleGroup === muscleGroupValue)
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
@@ -356,7 +360,9 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
 
   // Move exercise to another group
   const moveExercise = async (exerciseId: string, newGroupId: string) => {
-    await updateExercise(exerciseId, { group_id: newGroupId });
+    const newGroup = groups.find(g => g.id === newGroupId);
+    const muscleGroupValue = newGroup?.name.toLowerCase().replace(/ /g, '-') || '';
+    await updateExercise(exerciseId, { muscleGroup: muscleGroupValue });
     setShowGroupSelector(null);
     setMoveExerciseId(null);
     refreshExercises();
@@ -366,9 +372,11 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   const handleAddExercise = (groupId: string) => {
     setCreateGroupId(groupId);
     setSelectedExercise(null);
+    const group = groups.find(g => g.id === groupId);
+    const muscleGroupValue = group?.name.toLowerCase().replace(/ /g, '-') || '';
     setCreateExerciseForm({
       id: '',
-      group_id: groupId,
+      muscleGroup: muscleGroupValue,
       name: '',
       muscles: [],
       reps: null,
@@ -383,7 +391,9 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
   const deleteGroup = async (groupId: string) => {
     try {
       // First delete all exercises in the group
-      const exercisesInGroup = exercises.filter(e => e.group_id === groupId);
+      const group = groups.find(g => g.id === groupId);
+      const muscleGroupValue = group?.name.toLowerCase().replace(/ /g, '-') || '';
+      const exercisesInGroup = exercises.filter(e => e.muscleGroup === muscleGroupValue);
       for (const ex of exercisesInGroup) {
         await deleteExerciseFromDb(ex.id);
       }
@@ -445,9 +455,11 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     try {
       if (modalMode === 'create' && createGroupId) {
         const newId = `${createGroupId}-${Date.now()}`;
+        const group = groups.find(g => g.id === createGroupId);
+        const muscleGroupValue = group?.name.toLowerCase().replace(/ /g, '-') || '';
         await createExercise({
           id: newId,
-          group_id: createGroupId,
+          muscleGroup: muscleGroupValue,
           name: exerciseData.name || '',
           muscles: exerciseData.muscles || [],
           reps: exerciseData.reps || null,
@@ -493,7 +505,8 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     const results: {groupId: string; exerciseIds: string[]}[] = [];
     
     groups.forEach(group => {
-      const groupExercises = exercises.filter(e => e.group_id === group.id);
+      const muscleGroupValue = group.name.toLowerCase().replace(/ /g, '-');
+      const groupExercises = exercises.filter(e => e.muscleGroup === muscleGroupValue);
       const matchingExercises = groupExercises.filter(ex => 
         ex.name.toLowerCase().includes(query)
       );
@@ -803,7 +816,8 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
                 return searchResult !== undefined;
               })
               .map(exercise => {
-                const group = groups.find(g => g.id === exercise.group_id);
+                const muscleGroupToGroupName = (mg: string) => mg.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const group = groups.find(g => g.name.toLowerCase().replace(/ /g, '-') === exercise.muscleGroup);
                 return (
                   <div
                     key={exercise.id}
@@ -867,7 +881,8 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
           >
             <div className="space-y-3">
               {groups.map(group => {
-                const groupExercises = exercises.filter(e => e.group_id === group.id);
+                const muscleGroupValue = group.name.toLowerCase().replace(/ /g, '-');
+                const groupExercises = exercises.filter(e => e.muscleGroup === muscleGroupValue);
                 const missingGifs = groupExercises.length - groupExercises.filter(e => exerciseGifs[e.id]).length;
                 return (
                   <SortableGroup
