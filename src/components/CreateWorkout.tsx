@@ -482,12 +482,17 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       })
     }));
     
-    const workout = {
-      id: workoutId,
+    const workout: any = {
       name: workoutName,
       stations: cleanStations,
-      createdAt: createdAt
+      createdAt: createdAt,
+      savedAt: new Date().toISOString()
     };
+    
+    // Only include id when updating, not creating (PocketBase auto-generates)
+    if (isEditing) {
+      workout.id = workoutId;
+    }
     
     console.log('[handleSave] Saving workout with id:', workoutId, 'isEditing:', isEditing);
     console.log('[handleSave] workout:', JSON.stringify(workout, null, 2));
