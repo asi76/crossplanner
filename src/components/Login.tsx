@@ -56,7 +56,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Dumbbell className="w-6 h-6 text-blue-400" />
-            <h1 className="text-xl font-bold text-white">Crosstraining</h1>
+            <h1 className="text-xl font-bold text-white">Crossplanner</h1>
           </div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
             >
               <Dumbbell className="w-12 h-12 text-blue-400" />
             </motion.div>
-            <h1 className="text-3xl font-bold text-white mb-2">Crosstraining</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Crossplanner</h1>
             <p className="text-gray-400 text-center">Sign in to access your workouts</p>
           </div>
 
@@ -167,7 +167,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
               </div>
 
               <p className="text-gray-400 mb-4">
-                Write a message to the administrator explaining why you should have access to the Crosstraining app.
+                Write a message to the administrator explaining why you should have access to the Crossplanner app.
               </p>
 
               <div className="mb-4">
@@ -184,7 +184,7 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
               <textarea
                 value={requestMessage}
                 onChange={(e) => setRequestMessage(e.target.value)}
-                placeholder="Hi, I would like to request access to the Crosstraining app because..."
+                placeholder="Hi, I would like to request access to the Crossplanner app because..."
                 className="w-full bg-dark-hover border border-dark-border rounded-lg p-4 text-white placeholder-gray-500 resize-none h-32 mb-4 focus:outline-none focus:border-blue-500"
               />
 
