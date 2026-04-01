@@ -11,7 +11,7 @@ const recordToObj = (record: any) => ({ id: record.id, ...record });
 
 // ============ GROUPS (exercise_groups) ============
 export const getGroups = async () => {
-  const records = await pb.collection('exercise_groups').getFullList({
+  const records = await pb.collection('exercise_groups').getFullList(100, {
     sort: 'sort_order',
   });
   return records.map(recordToObj);
@@ -32,14 +32,8 @@ export const updateGroup = async (id: string, data: any) => {
 };
 
 // ============ EXERCISES ============
-export const getExercises = async (groupId?: string) => {
-  if (groupId) {
-    const records = await pb.collection('exercises').getFullList({
-      filter: `muscleGroup = '${groupId}'`,
-    });
-    return records.map(recordToObj);
-  }
-  const records = await pb.collection('exercises').getFullList();
+export const getExercises = async () => {
+  const records = await pb.collection('exercises').getFullList(500);
   return records.map(recordToObj);
 };
 
