@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Plus, X, Trash2, ChevronDown, ChevronUp, ArrowLeft, Target, Image, Shield, RefreshCw, LogOut, GripVertical, Edit3, ArrowRightLeft } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, X, Trash2, ChevronDown, ChevronUp, ArrowLeft, Target, Image, Shield, RefreshCw, LogOut, GripVertical, Edit3, ArrowRightLeft, Search, Wand, Loader2 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { supabase } from '../supabase';
+import { createWorkout, updateWorkout, updateExercise } from '../firebase';
 import { getGifUrl } from '../data/gifMapping';
 import { Workout } from '../data/types';
 import { useAuth } from '../hooks/useAuth';
+import { useExercises } from '../hooks/useExercises';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 interface ExerciseGroup {
@@ -42,19 +43,41 @@ const WORKOUT_CATEGORIES = [
   { id: 'cardio2', name: 'Cardio 2' }
 ];
 
+// Default workout categories (tabs)
+const DEFAULT_CATEGORIES = [
+  { id: 'forza', name: 'Forza', exercises: [] },
+  { id: 'cardio1', name: 'Cardio 1', exercises: [] },
+  { id: 'cardio2', name: 'Cardio 2', exercises: [] }
+];
+
 export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProps) {
   const { user, role, signOut } = useAuth();
+  
+  // Initialize categories: merge saved categories with defaults to ensure all tabs exist
+  const getInitialCategories = () => {
+    if (!editWorkout?.stations || editWorkout.stations.length === 0) {
+      return DEFAULT_CATEGORIES;
+    }
+    // Merge saved stations with default categories (fill missing categories with empty exercises)
+    const savedCategoryIds = new Set(editWorkout.stations.map((s: any) => s.id));
+    const missingCategories = DEFAULT_CATEGORIES.filter(c => !savedCategoryIds.has(c.id));
+    return [...editWorkout.stations, ...missingCategories];
+  };
+  
   const [workoutName, setWorkoutName] = useState(editWorkout?.name || '');
-  const [workoutCategories, setWorkoutCategories] = useState<any[]>(
-    editWorkout?.stations || [
-      { id: 'forza', name: 'Forza', exercises: [] },
-      { id: 'cardio1', name: 'Cardio 1', exercises: [] },
-      { id: 'cardio2', name: 'Cardio 2', exercises: [] }
-    ]
-  );
+  const [workoutCategories, setWorkoutCategories] = useState<any[]>(getInitialCategories);
+  
+  // Track original workout ID to ensure we update (not create) even if editWorkout becomes null
+  const originalWorkoutIdRef = useRef<string | null>(editWorkout?.id || null);
+  const isEditing = originalWorkoutIdRef.current !== null;
+  
+  // Log for debugging
+  console.log('[CreateWorkout] editWorkout:', editWorkout, 'isEditing:', isEditing);
   const [selectedCategoryId, setSelectedCategoryId] = useState('forza');
-  const [groups, setGroups] = useState<ExerciseGroup[]>([]);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  
+  // Use shared exercises context (fetched once, shared across components)
+  const { groups, exercises, getExercisesByGroup: getExercisesByGroupCtx } = useExercises();
+  
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [viewingExercise, setViewingExercise] = useState<Exercise | null>(null);
   const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
@@ -65,7 +88,15 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const [moveExerciseModal, setMoveExerciseModal] = useState<{ exerciseIndex: number; fromCategory: string } | null>(null);
   const [fullEditModalExercise, setFullEditModalExercise] = useState<Exercise | null>(null);
 
-  const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId)!;
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{groupId: string; exerciseIds: string[]}[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // AI Auto-fill functionality
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const currentCategory = workoutCategories.find(c => c.id === selectedCategoryId) || workoutCategories[0];
 
   // DnD sensors
   const sensors = useSensors(
@@ -83,6 +114,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    if (!currentCategory) return;
 
     const oldIndex = currentCategory.exercises.findIndex((_: any, i: number) => `${selectedCategoryId}-${i}` === active.id);
     const newIndex = currentCategory.exercises.findIndex((_: any, i: number) => `${selectedCategoryId}-${i}` === over.id);
@@ -231,26 +263,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
     action();
   };
 
-  // Load groups and exercises from Supabase
-  const loadData = async () => {
-    const [groupsRes, exercisesRes] = await Promise.all([
-      supabase.from('exercise_groups').select('*').order('sort_order', { ascending: true }),
-      supabase.from('exercises').select('*')
-    ]);
-    
-    if (groupsRes.data) setGroups(groupsRes.data);
-    if (exercisesRes.data) setExercises(exercisesRes.data);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Get exercises for a specific group (sorted alphabetically)
+  // Get exercises for a specific group (sorted alphabetically) - uses context
   const getExercisesByGroup = (groupId: string): Exercise[] => {
-    return exercises
-      .filter(e => e.group_id === groupId)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return getExercisesByGroupCtx(groupId).sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const toggleGroup = (groupId: string) => {
@@ -260,9 +275,57 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
         next.delete(groupId);
       } else {
         next.add(groupId);
+        // Scroll the group header into view when expanding
+        setTimeout(() => {
+          const element = document.getElementById(`workout-group-header-${groupId}`);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            const top = rect.top + window.scrollY - 180; // 180px offset to clear sticky header with tabs
+            window.scrollTo({ top, behavior: 'smooth' });
+          }
+        }, 50);
       }
       return next;
     });
+  };
+
+  // Search exercises
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      setExpandedGroups(new Set());
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    const results: {groupId: string; exerciseIds: string[]}[] = [];
+    
+    groups.forEach(group => {
+      const groupExercises = exercises.filter(e => e.group_id === group.id);
+      const matchingExercises = groupExercises.filter(ex => 
+        ex.name.toLowerCase().includes(query)
+      );
+      
+      if (matchingExercises.length > 0) {
+        results.push({
+          groupId: group.id,
+          exerciseIds: matchingExercises.map(ex => ex.id)
+        });
+      }
+    });
+    
+    setSearchResults(results);
+    setIsSearching(true);
+    setExpandedGroups(new Set(results.map(r => r.groupId)));
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearching(false);
+    setExpandedGroups(new Set());
   };
 
   // Add exercise to current category and collapse the group it belongs to
@@ -370,6 +433,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
   };
 
   const handleSave = async () => {
+    console.log('[handleSave] Starting...');
+    
     const hasName = workoutName.trim();
     const hasExercises = !workoutCategories.every(s => s.exercises.length === 0);
     
@@ -386,28 +451,230 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       return;
     }
 
+    // Use the tracked original ID
+    const workoutId = originalWorkoutIdRef.current || Date.now().toString();
+    
+    // Ensure createdAt is always a string
+    let createdAt = editWorkout?.createdAt;
+    if (!createdAt) {
+      createdAt = new Date().toISOString();
+    } else if (typeof createdAt !== 'string') {
+      // If it's a Date object, convert to ISO string
+      createdAt = new Date(createdAt).toISOString();
+    }
+    
+    // Clean stations data - only keep needed properties and remove undefined values
+    const cleanStations = workoutCategories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      exercises: (cat.exercises || []).map((ex: any) => {
+        const cleanEx: any = {};
+        // Only include defined values
+        if (ex.exerciseId !== undefined) cleanEx.exerciseId = ex.exerciseId;
+        if (ex.exerciseName !== undefined) cleanEx.exerciseName = ex.exerciseName;
+        if (ex.groupId !== undefined) cleanEx.groupId = ex.groupId;
+        if (ex.sets !== undefined) cleanEx.sets = ex.sets;
+        if (ex.reps !== undefined) cleanEx.reps = ex.reps;
+        if (ex.time !== undefined) cleanEx.time = ex.time;
+        if (ex.rest !== undefined) cleanEx.rest = ex.rest;
+        return cleanEx;
+      })
+    }));
+    
     const workout = {
-      id: editWorkout?.id || Date.now().toString(),
+      id: workoutId,
       name: workoutName,
-      stations: workoutCategories.filter(s => s.exercises.length > 0),
-      createdAt: editWorkout?.createdAt || new Date().toISOString()
+      stations: cleanStations,
+      createdAt: createdAt
     };
+    
+    console.log('[handleSave] Saving workout with id:', workoutId, 'isEditing:', isEditing);
+    console.log('[handleSave] workout:', JSON.stringify(workout, null, 2));
 
-    if (editWorkout) {
-      await supabase.from('workouts').update(workout).eq('id', editWorkout.id);
-    } else {
-      await supabase.from('workouts').insert(workout);
+    try {
+      if (isEditing) {
+        console.log('[handleSave] Updating workout:', workoutId);
+        await updateWorkout(workoutId, workout);
+        console.log('[handleSave] Update complete');
+      } else {
+        console.log('[handleSave] Creating new workout');
+        await createWorkout(workout);
+        console.log('[handleSave] Create complete');
+      }
+      onSave(workout);
+    } catch (error) {
+      console.error('[handleSave] Error:', error);
+      alert('Errore nel salvare: ' + (error as Error).message);
+    }
+  };
+
+  // AI Auto-fill workout
+  const handleAiAutoFill = async () => {
+    if (exercises.length === 0 || groups.length === 0) {
+      alert('Carica dati prima di usare AI');
+      return;
     }
 
-    onSave(workout);
+    setIsAiLoading(true);
+
+    try {
+      // Define the strength groups we need (6 exercises)
+      const strengthGroups = ['chest', 'arms', 'back', 'core', 'shoulders', 'legs'];
+      
+      // Find group IDs by name
+      const getGroupIdByName = (name: string) => {
+        const group = groups.find(g => g.name.toLowerCase().includes(name.toLowerCase()));
+        return group?.id || null;
+      };
+
+      // Get exercises for a group
+      const getGroupExercises = (groupId: string): Exercise[] => {
+        return exercises.filter(e => e.group_id === groupId);
+      };
+
+      // Count muscles in a category
+      const countMuscles = (exs: Exercise[]) => {
+        const counts: Record<string, number> = {};
+        exs.forEach(ex => {
+          ex.muscles?.forEach((m: string) => {
+            counts[m] = (counts[m] || 0) + 1;
+          });
+        });
+        return counts;
+      };
+
+      // Check if adding exercise would cause red tag (count >= 4)
+      const wouldBeRed = (currentCounts: Record<string, number>, exercise: Exercise): boolean => {
+        for (const muscle of exercise.muscles || []) {
+          if ((currentCounts[muscle] || 0) >= 3) return true; // Adding would make it 4+
+        }
+        return false;
+      };
+
+      // Pick a random exercise from a group that doesn't cause red
+      const pickExercise = (
+        groupId: string, 
+        currentExs: Exercise[], 
+        maxRetries: number = 20
+      ): Exercise | null => {
+        const groupExs = getGroupExercises(groupId);
+        const currentCounts = countMuscles(currentExs);
+        const usedIds = new Set(currentExs.map(e => e.id));
+        
+        for (let i = 0; i < maxRetries; i++) {
+          const candidates = groupExs.filter(e => !usedIds.has(e.id));
+          if (candidates.length === 0) break;
+          
+          const randomEx = candidates[Math.floor(Math.random() * candidates.length)];
+          if (!wouldBeRed(currentCounts, randomEx)) {
+            return randomEx;
+          }
+        }
+        
+        // If we couldn't find non-red, just return any random (fallback)
+        const available = groupExs.filter(e => !usedIds.has(e.id));
+        return available.length > 0 
+          ? available[Math.floor(Math.random() * available.length)]
+          : null;
+      };
+
+      // ======== FORZA ========
+      const forzaExercises: Exercise[] = [];
+      for (const groupName of strengthGroups) {
+        const groupId = getGroupIdByName(groupName);
+        if (groupId) {
+          const picked = pickExercise(groupId, forzaExercises);
+          if (picked) forzaExercises.push(picked);
+        }
+      }
+
+      // ======== CARDIO ========
+      // Find cardio group(s) - look for "cardio", "hiit", "aerobico"
+      const cardioGroupId = getGroupIdByName('cardio') || getGroupIdByName('hiit') || getGroupIdByName('aerobico');
+      let cardio1Exercises: Exercise[] = [];
+      let cardio2Exercises: Exercise[] = [];
+
+      if (cardioGroupId) {
+        const cardioExs = getGroupExercises(cardioGroupId);
+        const shuffled = [...cardioExs].sort(() => Math.random() - 0.5);
+        
+        // Cardio 1: first 2
+        cardio1Exercises = shuffled.slice(0, 2);
+        // Cardio 2: next 2 different ones
+        cardio2Exercises = shuffled.slice(2, 4);
+      }
+
+      // Shuffle all exercises before adding to workout (final random order)
+      const shuffledForza = [...forzaExercises].sort(() => Math.random() - 0.5);
+
+      // Build the new workout categories
+      const newCategories = [
+        {
+          id: 'forza',
+          name: 'Forza',
+          exercises: shuffledForza.map((ex, idx) => ({
+            exerciseId: ex.id,
+            exerciseName: ex.name,  // Store name for display
+            groupId: ex.group_id,
+            muscles: ex.muscles,
+            reps: ex.reps || 10,
+            sets: 3,
+            rest: 60,
+            difficulty: ex.difficulty || 'medium',
+            gifUrl: getGifUrl(ex.id)
+          }))
+        },
+        {
+          id: 'cardio1',
+          name: 'Cardio 1',
+          exercises: cardio1Exercises.map((ex) => ({
+            exerciseId: ex.id,
+            exerciseName: ex.name,  // Store name for display
+            groupId: ex.group_id,
+            muscles: ex.muscles,
+            time: 45,
+            sets: 1,
+            rest: 15,
+            difficulty: ex.difficulty || 'medium',
+            gifUrl: getGifUrl(ex.id)
+          }))
+        },
+        {
+          id: 'cardio2',
+          name: 'Cardio 2',
+          exercises: cardio2Exercises.map((ex) => ({
+            exerciseId: ex.id,
+            exerciseName: ex.name,  // Store name for display
+            groupId: ex.group_id,
+            muscles: ex.muscles,
+            time: 45,
+            sets: 1,
+            rest: 15,
+            difficulty: ex.difficulty || 'medium',
+            gifUrl: getGifUrl(ex.id)
+          }))
+        }
+      ];
+
+      // Update state
+      setWorkoutCategories(newCategories);
+      setSelectedCategoryId('forza');
+      setWorkoutName(workoutName || 'Scheda AI');
+
+    } catch (error) {
+      console.error('[handleAiAutoFill] Error:', error);
+      alert('Errore nella generazione AI: ' + (error as Error).message);
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   const getExerciseById = (id: string) => exercises.find(e => e.id === id);
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      {/* Sticky Header - contains everything above tabs */}
-      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm -mx-4 px-4 pb-2 border-b border-dark-border space-y-2">
+      {/* Sticky Header - dark black */}
+      <div className="sticky top-0 z-40 bg-zinc-900 backdrop-blur-sm rounded-b-xl border-b-2 border-black/30 -mx-4 px-4 pb-2 space-y-2">
         {/* Title row */}
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-4">
@@ -422,6 +689,18 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleAiAutoFill}
+              disabled={isAiLoading}
+              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+              title="AI Auto-fill"
+            >
+              {isAiLoading ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Wand className="w-5 h-5 text-purple-400" />
+              )}
+            </button>
             <button
               onClick={() => {
                 setExpandedGroups(new Set());
@@ -457,7 +736,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             value={workoutName}
             onChange={(e) => setWorkoutName(e.target.value)}
             placeholder="Nome della scheda"
-            className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+            className="flex-1 px-4 py-3 bg-zinc-900 rounded-xl text-white placeholder-zinc-500 border border-zinc-700 focus:outline-none focus:border-blue-500"
           />
           <button
             onClick={handleSave}
@@ -524,7 +803,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
         >
           <div>
             {currentCategory.exercises.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nessun esercizio. Trascina dalla lista sotto.</p>
+              <p className="text-zinc-500 text-sm">Nessun esercizio. Aggiungi dalla lista sotto.</p>
             ) : (
               currentCategory.exercises.map((ex: any, index: number) => (
                 <SortableExerciseItem key={`${selectedCategoryId}-${index}`} ex={ex} index={index} />
@@ -538,72 +817,198 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-white">Libreria Esercizi</h3>
         
-        <div className="space-y-3">
-          {groups.map(group => (
-            <div key={group.id} className="bg-zinc-900 rounded-xl border border-zinc-800">
-              {/* Group Header */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
-                    {group.label}
-                  </span>
-                  <span className="text-base text-zinc-400">
-                    {getExercisesByGroup(group.id).length} esercizi
-                  </span>
-                </div>
-                {expandedGroups.has(group.id) ? (
-                  <ChevronUp className="w-5 h-5 text-zinc-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-zinc-400" />
-                )}
-              </button>
-
-              {/* Exercises List - shown when expanded */}
-              {expandedGroups.has(group.id) && (
-                <div className="border-t border-zinc-800 max-h-96 overflow-y-auto scrollbar-dark">
-                  {getExercisesByGroup(group.id).length === 0 ? (
-                    <div className="px-5 py-8 text-center text-zinc-500">
-                      Nessun esercizio
-                    </div>
-                  ) : (
-                    getExercisesByGroup(group.id).map(exercise => (
-                      <div
-                        key={exercise.id}
-                        className="px-5 py-4 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <button
-                              onClick={() => handleViewExercise(exercise)}
-                              className="text-left w-full"
-                            >
-                              <span className="text-white font-medium">{exercise.name}</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {exercise.muscles.map((muscle, idx) => (
-                                  <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white border border-white/30">{muscle}</span>
-                                ))}
-                              </div>
-                            </button>
-                          </div>
+        {/* Search Row */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Cerca esercizio..."
+              className="w-full px-4 py-2 pl-10 bg-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          </div>
+          <button
+            onClick={handleSearch}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+          >
+            Cerca
+          </button>
+          {isSearching && (
+            <button
+              onClick={clearSearch}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg font-medium transition-colors"
+            >
+              X
+            </button>
+          )}
+        </div>
+        
+        {/* Search Results Info */}
+        {isSearching && searchResults.length > 0 && (
+          <div className="text-sm text-zinc-400">
+            Trovati {searchResults.reduce((acc, r) => acc + r.exerciseIds.length, 0)} ex
+          </div>
+        )}
+        {isSearching && searchResults.length === 0 && searchQuery.trim() && (
+          <div className="bg-zinc-900 rounded-xl px-5 py-8 text-center text-zinc-500">
+            Nessun esercizio trovato per "{searchQuery}"
+          </div>
+        )}
+        
+        {/* When searching - show flat list - same style as ExerciseLibrary */}
+        {isSearching && searchResults.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {exercises
+              .filter(ex => {
+                const searchResult = searchResults.find(r => r.exerciseIds.includes(ex.id));
+                return searchResult !== undefined;
+              })
+              .map(exercise => {
+                const group = groups.find(g => g.id === exercise.group_id);
+                return (
+                  <div
+                    key={exercise.id}
+                    className="bg-zinc-900 rounded-xl px-5 py-4 hover:bg-zinc-800/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
                           <button
-                            onClick={() => handleAddExercise(exercise, group.id)}
-                            className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors ml-2"
-                            title="Aggiungi"
+                            onClick={() => handleViewExercise(exercise)}
+                            className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left flex items-center gap-2"
                           >
-                            <Plus className="w-5 h-5 text-white" />
+                            {exercise.name}
                           </button>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                            exercise.tipo === 'aerobico' 
+                              ? 'bg-blue-500/20 text-blue-400' 
+                              : 'bg-orange-500/20 text-orange-400'
+                          }`}>
+                            {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex flex-wrap gap-1">
+                            {exercise.muscles.map((muscle, idx) => (
+                              <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
+                            ))}
+                          </div>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                            exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                            exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}>
+                            {exercise.difficulty === 'beginner' ? 'Principiante' :
+                             exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                          </span>
                         </div>
                       </div>
-                    ))
+                      <button
+                        onClick={() => handleAddExercise(exercise, exercise.group_id)}
+                        className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors ml-2"
+                        title="Aggiungi"
+                      >
+                        <Plus className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+        
+        {/* When NOT searching - show expandable groups */}
+        {!isSearching && (
+          <div className="space-y-3">
+            {groups.map(group => (
+              <div key={group.id} className="bg-zinc-900 rounded-xl">
+                {/* Group Header */}
+                <button
+                  id={`workout-group-header-${group.id}`}
+                  onClick={() => toggleGroup(group.id)}
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
+                      {group.label}
+                    </span>
+                    <span className="text-base text-zinc-400">
+                      {getExercisesByGroup(group.id).length} ex
+                    </span>
+                  </div>
+                  {expandedGroups.has(group.id) ? (
+                    <ChevronUp className="w-5 h-5 text-zinc-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-zinc-400" />
                   )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                </button>
+
+                {/* Exercises List - shown when expanded - same style as ExerciseLibrary */}
+                {expandedGroups.has(group.id) && (
+                  <div className="max-h-96 overflow-y-auto scrollbar-dark">
+                    {getExercisesByGroup(group.id).length === 0 ? (
+                      <div className="px-5 py-8 text-center text-zinc-500">
+                        Nessun esercizio
+                      </div>
+                    ) : (
+                      getExercisesByGroup(group.id).map(exercise => (
+                        <div
+                          key={exercise.id}
+                          className="px-5 py-4 hover:bg-zinc-800/30 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <button
+                                  onClick={() => handleViewExercise(exercise)}
+                                  className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left flex items-center gap-2"
+                                >
+                                  {exercise.name}
+                                </button>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                                  exercise.tipo === 'aerobico' 
+                                    ? 'bg-blue-500/20 text-blue-400' 
+                                    : 'bg-orange-500/20 text-orange-400'
+                                }`}>
+                                  {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between mt-1">
+                                <div className="flex flex-wrap gap-1">
+                                  {exercise.muscles.map((muscle, idx) => (
+                                    <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
+                                  ))}
+                                </div>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
+                                  exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
+                                  exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {exercise.difficulty === 'beginner' ? 'Principiante' :
+                                   exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleAddExercise(exercise, group.id)}
+                              className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors ml-2"
+                              title="Aggiungi"
+                            >
+                              <Plus className="w-5 h-5 text-white" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       </div>
 
@@ -611,51 +1016,51 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       {viewingExercise && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => { setViewingExercise(null); setEditingExerciseInModal(false); }}>
           <div 
-            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
+            className="bg-zinc-900 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
-              <div className="flex items-center gap-3">
-                <Target className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-bold text-white">
+            {/* Header - compact */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-blue-500" />
+                <h2 className="text-base font-semibold text-white">
                   {editingExerciseInModal ? 'Modifica Esercizio' : viewingExercise.name}
                 </h2>
               </div>
               <button
                 onClick={() => { setViewingExercise(null); setEditingExerciseInModal(false); }}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-4 h-4 text-zinc-400" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="flex flex-col md:flex-row max-h-[calc(80vh-70px)]">
-              {/* Left - GIF */}
-              <div className="md:w-1/2 bg-zinc-950 flex items-center justify-center p-4 min-h-[200px]">
+            {/* Content - scrollable, stacked vertically */}
+            <div className="flex-1 overflow-y-auto">
+              {/* GIF at top */}
+              <div className="bg-zinc-900 flex items-center justify-center p-4 min-h-[180px]">
                 {viewingExerciseGif ? (
                   <img 
                     src={viewingExerciseGif} 
                     alt={viewingExercise.name} 
-                    className="max-w-full max-h-full object-contain rounded-lg"
+                    className="max-w-full max-h-[200px] object-contain rounded-lg"
                   />
                 ) : (
                   <div className="text-zinc-500 text-center">
-                    <Image className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                    <Image className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Nessuna immagine</p>
                   </div>
                 )}
               </div>
 
-              {/* Right - Info or Edit Form */}
-              <div className="md:w-1/2 p-6 overflow-y-auto modal-scroll">
+              {/* Info below GIF - scrollable if needed */}
+              <div className="p-4">
                 {editingExerciseInModal ? (
-                  /* Edit Form */
-                  <div className="space-y-4">
-                    {/* Gruppo - selector in edit mode */}
+                  /* Edit Form - compact layout */
+                  <div className="space-y-3">
+                    {/* Gruppo */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Gruppo</h3>
                       <select
                         value={editingGroupId || viewingExercise.group_id || ''}
                         onChange={(e) => {
@@ -669,7 +1074,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                             }
                           }
                         }}
-                        className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-600 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="w-full px-3 py-2 bg-zinc-800 text-white rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                       >
                         {groups.map(g => (
                           <option key={g.id} value={g.id}>{g.label}</option>
@@ -678,25 +1083,25 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     </div>
                     {/* Muscoli */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
-                      <div className="flex flex-wrap gap-2">
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Muscoli</h3>
+                      <div className="flex flex-wrap gap-1">
                         {viewingExercise.muscles?.map((muscle, idx) => (
-                          <span key={idx} className="px-2 py-1 rounded text-sm bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                          <span key={idx} className="px-2 py-0.5 rounded text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             {muscle}
                           </span>
                         ))}
                       </div>
                     </div>
                     {/* Tipo e Difficolta */}
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm px-3 py-1 rounded ${
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className={`px-2 py-1 rounded ${
                         viewingExercise.tipo === 'aerobico' 
                           ? 'bg-blue-500/20 text-blue-400' 
                           : 'bg-orange-500/20 text-orange-400'
                       }`}>
                         {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                       </span>
-                      <span className={`text-sm px-3 py-1 rounded ${
+                      <span className={`px-2 py-1 rounded ${
                         viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
                         viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-red-500/20 text-red-400'
@@ -707,29 +1112,29 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     </div>
                     {/* Descrizione */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                      <p className="text-zinc-300 text-base leading-relaxed">
-                        {viewingExercise.description || 'Nessuna descrizione disponibile.'}
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Descrizione</h3>
+                      <p className="text-zinc-300 text-sm leading-relaxed">
+                        {viewingExercise.description || 'Nessuna descrizione.'}
                       </p>
                     </div>
                   </div>
                 ) : (
                   /* View Mode */
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {/* Descrizione */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Descrizione</h3>
-                      <p className="text-zinc-300 text-base leading-relaxed">
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Descrizione</h3>
+                      <p className="text-zinc-300 text-sm leading-relaxed">
                         {viewingExercise.description || 'Nessuna descrizione disponibile.'}
                       </p>
                     </div>
 
                     {/* Muscoli */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Muscoli</h3>
-                      <div className="flex flex-wrap gap-2">
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Muscoli</h3>
+                      <div className="flex flex-wrap gap-1">
                         {viewingExercise.muscles?.map((muscle, idx) => (
-                          <span key={idx} className="px-2 py-1 rounded text-sm bg-white/20 text-white border border-white/30">
+                          <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">
                             {muscle}
                           </span>
                         ))}
@@ -737,15 +1142,15 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     </div>
 
                     {/* Tipo e Difficolta */}
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm px-3 py-1 rounded ${
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className={`px-2 py-1 rounded ${
                         viewingExercise.tipo === 'aerobico' 
                           ? 'bg-blue-500/20 text-blue-400' 
                           : 'bg-orange-500/20 text-orange-400'
                       }`}>
                         {viewingExercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
                       </span>
-                      <span className={`text-sm px-3 py-1 rounded ${
+                      <span className={`px-2 py-1 rounded ${
                         viewingExercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
                         viewingExercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-red-500/20 text-red-400'
@@ -755,19 +1160,19 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                       </span>
                     </div>
 
-                    {/* Gruppo - displayed as value */}
+                    {/* Gruppo */}
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
-                      <p className="text-white font-medium">
+                      <h3 className="text-xs font-medium text-zinc-400 mb-1">Gruppo</h3>
+                      <p className="text-white text-sm font-medium">
                         {groups.find(g => g.id === (editingGroupId || viewingExercise.group_id))?.label || 'Nessun gruppo'}
                       </p>
                     </div>
 
                     {/* Modifica Button */}
-                    <div className="flex justify-end pt-3">
+                    <div className="flex justify-end pt-2">
                       <button
                         onClick={() => { setViewingExercise(null); setEditingExerciseInModal(false); setFullEditModalExercise(viewingExercise); }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
                       >
                         Modifica
                       </button>
@@ -783,10 +1188,10 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       {moveExerciseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setMoveExerciseModal(null)}>
           <div
-            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-md overflow-hidden"
+            className="bg-zinc-900 rounded-2xl w-full max-w-md overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-500/20 p-2 rounded-lg">
                   <ArrowRightLeft className="w-5 h-5 text-blue-400" />
@@ -835,35 +1240,22 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
             setEditingExerciseInModal(false);
           }}
           onSave={async (exerciseData) => {
-            // Update exercise in database and local state
+            // Update exercise in database 
             try {
-              const { error } = await supabase
-                .from('exercises')
-                .update({
-                  name: exerciseData.name,
-                  muscles: exerciseData.muscles,
-                  reps: exerciseData.reps,
-                  duration: exerciseData.duration,
-                  difficulty: exerciseData.difficulty,
-                  tipo: exerciseData.tipo,
-                  description: exerciseData.description,
-                })
-                .eq('id', fullEditModalExercise.id);
+              await updateExercise(fullEditModalExercise.id, {
+                name: exerciseData.name,
+                muscles: exerciseData.muscles,
+                reps: exerciseData.reps,
+                duration: exerciseData.duration,
+                difficulty: exerciseData.difficulty,
+                tipo: exerciseData.tipo,
+                description: exerciseData.description,
+              });
 
-              if (error) {
-                console.error('Error updating exercise:', error);
-              } else {
-                // Update local exercises state immediately
-                setExercises(prev => prev.map(ex => 
-                  ex.id === fullEditModalExercise.id 
-                    ? { ...ex, ...exerciseData }
-                    : ex
-                ));
-                // Also update viewingExercise so read-only modal shows updated data
-                setViewingExercise(prev => prev ? { ...prev, ...exerciseData } : null);
-              }
+              // Update viewingExercise so read-only modal shows updated data
+              setViewingExercise(prev => prev ? { ...prev, ...exerciseData } : null);
             } catch (err) {
-              console.error('Error saving exercise:', err);
+              console.error('Error updating exercise:', err);
             }
             setFullEditModalExercise(null);
           }}
@@ -877,7 +1269,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       {duplicateError && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setDuplicateError(null)}>
           <div
-            className="bg-zinc-900 rounded-2xl border border-red-500/50 w-full max-w-md overflow-hidden"
+            className="bg-zinc-900 rounded-2xl w-full max-w-md overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
@@ -898,7 +1290,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
               <p className="text-zinc-300 mb-2">L'esercizio <span className="text-white font-medium">{duplicateError}</span> e' gia presente in una delle tre tabelle.</p>
               <p className="text-zinc-500 text-sm">Rimuovi prima l'esercizio esistente per aggiungerlo a questa tabella.</p>
             </div>
-            <div className="px-5 py-4 border-t border-zinc-800 flex justify-end">
+            <div className="px-5 py-4 flex justify-end">
               <button
                 onClick={() => setDuplicateError(null)}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors"

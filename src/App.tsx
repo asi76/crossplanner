@@ -14,10 +14,12 @@ import {
   Pencil,
   Target,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useWorkout } from './hooks/useWorkout';
+import { ExercisesProvider, useExercises } from './hooks/useExercises';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
 import { CreateWorkout } from './components/CreateWorkout';
@@ -25,7 +27,7 @@ import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { WorkoutDisplay } from './components/WorkoutDisplay';
 import { NotificationModal } from './components/NotificationModal';
 import { Workout } from './data/types';
-import { fetchExercises } from './pbService';
+import { createWorkout } from './firebase';
 import { getGifUrl } from './data/gifMapping';
 
 type View = 'home' | 'create' | 'library' | 'workout' | 'admin';
@@ -42,8 +44,10 @@ function App() {
     savedWorkouts,
     loadSavedWorkouts,
     saveWorkout,
-    deleteWorkout
+    deleteWorkout,
+    duplicateWorkout
   } = useWorkout();
+  const { exercises: allExercises } = useExercises();
   const [currentView, setCurrentView] = useState<View>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('lastView') as View) || 'home';
@@ -57,16 +61,6 @@ function App() {
   const [viewingExerciseData, setViewingExerciseData] = useState<any>(null);
   const [viewingExerciseGif, setViewingExerciseGif] = useState<string | null>(null);
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
-  const [allExercises, setAllExercises] = useState<any[]>([]);
-
-  // Load all exercises for display (muscles, tipo, difficulty)
-  useEffect(() => {
-    async function loadExercises() {
-      const records = await fetchExercises();
-      setAllExercises(records as any[]);
-    }
-    loadExercises();
-  }, []);
 
   useEffect(() => {
     if (role === 'enabled' || role === 'admin') {
@@ -77,6 +71,10 @@ function App() {
   // Persist current view to localStorage
   useEffect(() => {
     localStorage.setItem('lastView', currentView);
+    // Scroll to top when view changes to home
+    if (currentView === 'home') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, [currentView]);
 
   const handleStartWorkout = (workout: Workout) => {
@@ -126,11 +124,13 @@ function App() {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('it-IT', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
   };
 
   if (loading) {
@@ -162,7 +162,7 @@ function App() {
         <AdminPanel />
         <button
           onClick={() => setCurrentView('home')}
-          className="fixed bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
+          className="fixed bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-dark-card rounded-lg text-gray-400 hover:text-white transition-colors"
         >
           <Dumbbell className="w-5 h-5" />
           Back to App
@@ -186,7 +186,8 @@ function App() {
       <CreateWorkout
         editWorkout={editingWorkout}
         onSave={(workout) => {
-          saveWorkout(workout);
+          // CreateWorkout already saved via updateWorkout/createWorkout
+          // Just reset state here
           setEditingWorkout(null);
           setCurrentView('home');
         }}
@@ -210,16 +211,16 @@ function App() {
   // Home view with inline expandable workout cards
   return (
     <div className="min-h-screen bg-dark-bg">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm border-b border-dark-border">
+      {/* Sticky Header - dark black */}
+      <div className="sticky top-0 z-40 bg-zinc-900 backdrop-blur-sm rounded-b-xl border-b-2 border-black/30">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2 rounded-xl">
-                <Dumbbell className="w-6 h-6 text-blue-400" />
+              <div className="bg-zinc-700 p-2 rounded-xl">
+                <Dumbbell className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Crosstraining</h1>
+                <h1 className="text-[1.375rem] font-bold text-white">Crosstraining</h1>
                 <p className="text-gray-400 text-xs">Benvenuto, {user.displayName?.split(' ')[0] || 'Atleta'}</p>
               </div>
             </div>
@@ -227,7 +228,7 @@ function App() {
               {role === 'admin' && (
                 <button
                   onClick={() => setCurrentView('admin')}
-                  className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className="p-2 bg-zinc-700 rounded-lg text-gray-300 hover:text-white transition-colors"
                   title="Admin Panel"
                 >
                   <Shield className="w-5 h-5" />
@@ -238,21 +239,21 @@ function App() {
                   setExpandedWorkoutId(null);
                   window.scrollTo({ top: 0, behavior: 'instant' });
                 }}
-                className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="p-2 bg-zinc-700 rounded-lg text-gray-300 hover:text-white transition-colors"
                 title="Comprimi tutto"
               >
                 <ChevronUp className="w-5 h-5" />
               </button>
               <button
-                onClick={() => window.location.reload()}
-                className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
-                title="Refresh"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'instant' }) || window.location.reload()}
+                className="p-2 bg-zinc-700 rounded-lg text-gray-300 hover:text-white transition-colors"
+                title="Aggiorna Pagina"
               >
                 <RefreshCw className="w-5 h-5" />
               </button>
               <button
                 onClick={signOut}
-                className="p-2 bg-dark-card border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="p-2 bg-zinc-700 rounded-lg text-gray-300 hover:text-white transition-colors"
                 title="Sign Out"
               >
                 <LogOut className="w-5 h-5" />
@@ -271,7 +272,7 @@ function App() {
             onClick={() => setCurrentView('create')}
             className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-left group flex items-center gap-4"
           >
-            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+            <div className="bg-blue-500/30 w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
               <Plus className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -284,10 +285,10 @@ function App() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('library')}
-            className="bg-dark-card border border-dark-border rounded-2xl p-5 text-left group hover:border-blue-500/50 transition-colors flex items-center gap-4"
+            className="bg-zinc-900 rounded-2xl p-5 text-left group hover:bg-zinc-800 transition-colors flex items-center gap-4"
           >
-            <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-500/30 transition-colors">
-              <Library className="w-6 h-6 text-blue-400" />
+            <div className="bg-zinc-700 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-zinc-600 transition-colors">
+              <Library className="w-6 h-6 text-white" />
             </div>
             <div>
               <h3 className="text-white font-bold text-lg">Libreria Esercizi</h3>
@@ -304,7 +305,7 @@ function App() {
         </div>
 
         {savedWorkouts.length === 0 ? (
-          <div className="bg-dark-card border border-dark-border rounded-xl p-8 text-center">
+          <div className="bg-zinc-900 rounded-xl p-8 text-center">
             <Dumbbell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 mb-2">Nessuna scheda salvata</p>
             <p className="text-gray-500 text-sm mb-4">Crea la tua prima scheda</p>
@@ -324,16 +325,21 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`bg-dark-card border rounded-xl overflow-hidden transition-colors ${
+                className={`bg-zinc-900 rounded-xl overflow-hidden transition-colors ${
                   expandedWorkoutId === workout.id 
-                    ? 'border-blue-500 w-full' 
-                    : 'border-dark-border hover:border-blue-500/50'
+                    ? 'w-full' 
+                    : ''
                 }`}
               >
                 {/* Workout Header - clickable to expand */}
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer"
-                  onClick={() => setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id)}
+                  onClick={() => {
+                    if (expandedWorkoutId !== workout.id) {
+                      window.scrollTo({ top: 0, behavior: 'instant' });
+                    }
+                    setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id);
+                  }}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     {expandedWorkoutId === workout.id ? (
@@ -345,11 +351,33 @@ function App() {
                       <h3 className="text-white font-semibold">{workout.name}</h3>
                       <span className="text-gray-500 text-sm">
                         {formatDate(workout.createdAt)} • {' '}
-                        {workout.stations.reduce((acc, s) => acc + s.exercises.length, 0)} esercizi
+                        {workout.stations.reduce((acc, s) => acc + s.exercises.length, 0)} ex
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Create a proper duplicated workout with new ID
+                        const copy = {
+                          ...JSON.parse(JSON.stringify(workout)),
+                          id: 'workout-' + Date.now(),
+                          name: workout.name + ' (copia)',
+                          createdAt: new Date().toISOString()
+                        };
+                        // Save to Firebase database only
+                        createWorkout(copy).then(() => {
+                          alert('Copia creata e salvata! Ricarica la pagina.');
+                        }).catch((error) => {
+                          alert('Errore nel salvare la copia al database: ' + error.message);
+                        });
+                      }}
+                      className="p-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors"
+                      title="Duplica"
+                    >
+                      <Copy className="w-5 h-5 text-green-400" />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -396,10 +424,9 @@ function App() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="border-t border-dark-border"
                     >
                       {/* Category Tabs - same style as CreateWorkout */}
-                      <div className="flex gap-2 p-4 border-b border-dark-border">
+                      <div className="flex gap-2 p-4">
                         {WORKOUT_CATEGORIES.map((cat) => {
                           const exercises = getExercisesByCategory(workout, cat.id);
                           const isSelected = selectedCategoryId === cat.id;
@@ -491,7 +518,7 @@ function App() {
           onClick={() => setViewingExercise(null)}
         >
           <div 
-            className="bg-zinc-900 rounded-2xl border border-zinc-700 w-full max-w-2xl max-h-[80vh] overflow-hidden"
+            className="bg-zinc-900 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
@@ -509,7 +536,7 @@ function App() {
               </button>
             </div>
             <div className="flex flex-col md:flex-row max-h-[calc(80vh-70px)]">
-              <div className="md:w-1/2 bg-zinc-950 flex items-center justify-center p-4 min-h-[200px]">
+              <div className="md:w-1/2 bg-zinc-900 flex items-center justify-center p-4 min-h-[200px]">
                 {viewingExerciseGif ? (
                   <img 
                     src={viewingExerciseGif} 

@@ -1,38 +1,11 @@
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged,
-  User 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  getDoc,
-  setDoc, 
-  deleteDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  serverTimestamp,
-  updateDoc
-} from 'firebase/firestore';
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject
-} from 'firebase/storage';
-import { firebaseConfig } from './config';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+// Reuse the same app, db, storage from firebase.ts
+import { app, db, storage } from '../firebase';
 
-const app = initializeApp(firebaseConfig);
+export { app, db, storage };
 export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 export const ADMIN_EMAIL = 'asi.vong@gmail.com';
@@ -47,9 +20,16 @@ export const logOut = async (): Promise<void> => {
 };
 
 export const getUserRole = async (email: string): Promise<string | null> => {
-  const userDoc = await getDoc(doc(db, 'users', email));
+  const lowerEmail = email.toLowerCase();
+  // Try lowercase version first (document ID)
+  const userDoc = await getDoc(doc(db, 'users', lowerEmail));
   if (userDoc.exists()) {
     return userDoc.data().role;
+  }
+  // Try original email (in case of mixed case stored)
+  const userDoc2 = await getDoc(doc(db, 'users', email));
+  if (userDoc2.exists()) {
+    return userDoc2.data().role;
   }
   return null;
 };

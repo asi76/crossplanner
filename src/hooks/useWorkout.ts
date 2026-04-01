@@ -1,78 +1,65 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Workout, Station } from '../data/types';
-import { supabase } from '../supabase';
+import { getWorkout, createWorkout, updateWorkout, deleteWorkout as deleteWorkoutFromDb, subscribeToWorkouts } from '../firebase';
 
 export const useWorkout = () => {
   const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [savedWorkouts, setSavedWorkouts] = useState<Workout[]>([]);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
 
+  // Set up real-time listener for workouts - only reads once, then updates automatically
+  useEffect(() => {
+    console.log('[useWorkout] Setting up real-time listener');
+    
+    const unsubscribe = subscribeToWorkouts((workouts) => {
+      console.log('[useWorkout] Received', workouts.length, 'workouts from listener');
+      const mapped: Workout[] = workouts.map(w => ({
+        id: w.id,
+        name: w.name,
+        stations: w.stations || [],
+        createdAt: w.createdAt ? new Date(w.createdAt) : new Date()
+      }));
+      setSavedWorkouts(mapped);
+    });
+
+    return () => {
+      console.log('[useWorkout] Cleaning up listener');
+      unsubscribe();
+    };
+  }, []);
+
   const loadSavedWorkouts = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('workouts')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error loading workouts:', error);
-        return;
-      }
-      
-      if (data) {
-        const workouts: Workout[] = data.map(w => ({
-          id: w.id,
-          name: w.name,
-          stations: w.stations || [],
-          createdAt: new Date(w.created_at)
-        }));
-        setSavedWorkouts(workouts);
-      }
-    } catch (error) {
-      console.error('Error loading workouts:', error);
-    }
+    // No longer needed - listener handles this automatically
+    // Keeping for backwards compatibility
+    console.log('[useWorkout] loadSavedWorkouts called (no-op, listener is active)');
   }, []);
 
   const saveWorkout = useCallback(async (workout: Workout) => {
     try {
-      // Check if already exists in Supabase
-      const { data: existing } = await supabase
-        .from('workouts')
-        .select('id')
-        .eq('id', workout.id)
-        .maybeSingle();
+      // Check if already exists
+      const existing = await getWorkout(workout.id);
+      
+      const workoutData = {
+        id: workout.id,
+        name: workout.name,
+        stations: workout.stations,
+        createdAt: workout.createdAt instanceof Date 
+          ? workout.createdAt.toISOString() 
+          : workout.createdAt
+      };
       
       if (!existing) {
         // Insert if doesn't exist
-        await supabase
-          .from('workouts')
-          .insert({
-            id: workout.id,
-            name: workout.name,
-            stations: workout.stations,
-            created_at: workout.createdAt instanceof Date 
-              ? workout.createdAt.toISOString() 
-              : workout.createdAt
-          });
+        await createWorkout(workoutData);
       } else {
         // Update if exists
-        await supabase
-          .from('workouts')
-          .update({
-            name: workout.name,
-            stations: workout.stations
-          })
-          .eq('id', workout.id);
+        await updateWorkout(workout.id, {
+          name: workout.name,
+          stations: workout.stations
+        });
       }
       
-      // Update local state
-      setSavedWorkouts(prev => {
-        const exists = prev.find(w => w.id === workout.id);
-        if (exists) {
-          return prev.map(w => w.id === workout.id ? workout : w);
-        }
-        return [...prev, workout];
-      });
+      // Note: No need to update local state - the listener will handle it
     } catch (error) {
       console.error('Error saving workout:', error);
     }
@@ -80,12 +67,8 @@ export const useWorkout = () => {
 
   const deleteWorkout = useCallback(async (id: string) => {
     try {
-      await supabase
-        .from('workouts')
-        .delete()
-        .eq('id', id);
-      
-      setSavedWorkouts(prev => prev.filter(w => w.id !== id));
+      await deleteWorkoutFromDb(id);
+      // Note: No need to update local state - the listener will handle it
     } catch (error) {
       console.error('Error deleting workout:', error);
     }
