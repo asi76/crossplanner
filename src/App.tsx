@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Dumbbell, 
@@ -55,6 +55,8 @@ function App() {
   });
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('forza');
   const [viewingExercise, setViewingExercise] = useState<any>(null);
   const [viewingExerciseData, setViewingExerciseData] = useState<any>(null);
@@ -211,7 +213,7 @@ function App() {
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Sticky Header - dark black */}
-      <div className="sticky top-0 z-40 bg-zinc-900 backdrop-blur-sm rounded-b-xl border-b-2 border-black/30">
+      <div ref={headerRef} className="sticky top-0 z-40 bg-zinc-900 backdrop-blur-sm rounded-b-xl border-b-2 border-black/30">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -320,13 +322,17 @@ function App() {
             {savedWorkouts.map((workout, idx) => (
               <motion.div
                 key={workout.id}
+                ref={(el) => {
+                  if (el) cardRefs.current.set(workout.id, el);
+                  else cardRefs.current.delete(workout.id);
+                }}
                 layout
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className={`bg-zinc-900 rounded-xl overflow-hidden transition-colors ${
-                  expandedWorkoutId === workout.id 
-                    ? 'w-full' 
+                  expandedWorkoutId === workout.id
+                    ? 'w-full'
                     : ''
                 }`}
               >
@@ -334,10 +340,18 @@ function App() {
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer"
                   onClick={() => {
-                    if (expandedWorkoutId !== workout.id) {
-                      window.scrollTo({ top: 0, behavior: 'instant' });
+                    const isExpanding = expandedWorkoutId !== workout.id;
+                    setExpandedWorkoutId(isExpanding ? workout.id : null);
+                    if (isExpanding) {
+                      const cardEl = cardRefs.current.get(workout.id);
+                      const headerEl = headerRef.current;
+                      if (cardEl && headerEl) {
+                        const cardTop = cardEl.getBoundingClientRect().top;
+                        const headerBottom = headerEl.getBoundingClientRect().bottom;
+                        const scrollTarget = window.scrollY + cardTop - headerBottom - 10;
+                        window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                      }
                     }
-                    setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id);
                   }}
                 >
                   <div className="flex items-center gap-3 flex-1">
