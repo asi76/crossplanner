@@ -69,18 +69,17 @@ function App() {
     }
   }, [role, loadSavedWorkouts]);
 
-  // Scroll expanded card just below the sticky header
+  // Scroll expanded card just below the sticky header (works up and down)
   useEffect(() => {
     if (!expandedWorkoutId) return;
-    requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
       const cardEl = cardRefs.current.get(expandedWorkoutId);
       const headerEl = headerRef.current;
       if (!cardEl || !headerEl) return;
-      const cardTop = cardEl.getBoundingClientRect().top;
-      const headerBottom = headerEl.getBoundingClientRect().bottom;
-      const scrollTarget = window.scrollY + cardTop - headerBottom - 10;
-      window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-    });
+      cardEl.style.scrollMarginTop = `${headerEl.offsetHeight + 10}px`;
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    return () => clearTimeout(timer);
   }, [expandedWorkoutId]);
 
   // Persist current view to localStorage
@@ -117,7 +116,7 @@ function App() {
     const muscleCount: Record<string, number> = {};
     workout.stations.forEach((station: any) => {
       station.exercises?.forEach((ex: any) => {
-        const data = getExerciseById(ex.exerciseId);
+        const data = getExerciseById(ex.exerciseId, ex.exerciseName);
         data?.muscles?.forEach((m: string) => {
           muscleCount[m] = (muscleCount[m] || 0) + 1;
         });
@@ -134,8 +133,8 @@ function App() {
     return 'bg-green-500/30 text-green-300 border border-green-500/40';
   };
 
-  const getExerciseById = (id: string) => {
-    return allExercises.find(e => e.id === id);
+  const getExerciseById = (id: string, name?: string) => {
+    return allExercises.find(e => e.id === id) || (name ? allExercises.find(e => e.name === name) : undefined);
   };
 
   const formatDate = (date: Date) => {
@@ -469,7 +468,7 @@ function App() {
                         {(() => {
                           const muscleCount = getMuscleCountForWorkout(workout);
                           return getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
-                            const exerciseData = getExerciseById(ex.exerciseId);
+                            const exerciseData = getExerciseById(ex.exerciseId, ex.exerciseName);
                             return (
                             <div 
                               key={index}
