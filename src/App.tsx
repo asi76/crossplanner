@@ -69,6 +69,20 @@ function App() {
     }
   }, [role, loadSavedWorkouts]);
 
+  // Scroll expanded card just below the sticky header
+  useEffect(() => {
+    if (!expandedWorkoutId) return;
+    requestAnimationFrame(() => {
+      const cardEl = cardRefs.current.get(expandedWorkoutId);
+      const headerEl = headerRef.current;
+      if (!cardEl || !headerEl) return;
+      const cardTop = cardEl.getBoundingClientRect().top;
+      const headerBottom = headerEl.getBoundingClientRect().bottom;
+      const scrollTarget = window.scrollY + cardTop - headerBottom - 10;
+      window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+    });
+  }, [expandedWorkoutId]);
+
   // Persist current view to localStorage
   useEffect(() => {
     localStorage.setItem('lastView', currentView);
@@ -340,18 +354,7 @@ function App() {
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer"
                   onClick={() => {
-                    const isExpanding = expandedWorkoutId !== workout.id;
-                    setExpandedWorkoutId(isExpanding ? workout.id : null);
-                    if (isExpanding) {
-                      const cardEl = cardRefs.current.get(workout.id);
-                      const headerEl = headerRef.current;
-                      if (cardEl && headerEl) {
-                        const cardTop = cardEl.getBoundingClientRect().top;
-                        const headerBottom = headerEl.getBoundingClientRect().bottom;
-                        const scrollTarget = window.scrollY + cardTop - headerBottom - 10;
-                        window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-                      }
-                    }
+                    setExpandedWorkoutId(expandedWorkoutId === workout.id ? null : workout.id);
                   }}
                 >
                   <div className="flex items-center gap-3 flex-1">
@@ -487,8 +490,8 @@ function App() {
                                     {ex.exerciseName || ex.exerciseId}
                                   </span>
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {exerciseData?.muscles?.slice(0, 3).map((m: string, i: number) => (
-                                      <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${getMuscleColor(m, muscleCount)}`}>{m}</span>
+                                    {exerciseData?.muscles?.map((m: string, i: number) => (
+                                      <span key={i} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{m}</span>
                                     ))}
                                   </div>
                                 </div>
