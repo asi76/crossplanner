@@ -145,7 +145,7 @@ function App() {
     const day = String(d.getDate()).padStart(2, '0');
     const hours = String(d.getHours()).padStart(2, '0');
     const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${String(year).slice(-2)}-${month}-${day}`;
+    return `${String(year).slice(-2)}:${month}:${day} ${hours}:${minutes}`;
   };
 
   if (loading) {
@@ -446,7 +446,7 @@ function App() {
                       </div>
 
                       {/* Exercise List - fixed height showing ~6 exercises */}
-                      <div className="px-4 pb-4 overflow-y-auto max-h-[540px]">
+                      <div className="px-4 pb-4 overflow-y-auto max-h-[480px]">
                         {(() => {
                           const muscleCount = getMuscleCountForWorkout(workout);
                           return getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
