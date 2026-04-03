@@ -50,6 +50,20 @@ const DEFAULT_CATEGORIES = [
   { id: 'cardio2', name: 'Cardio 2', exercises: [] }
 ];
 
+// Muscle group colors (same as App.tsx)
+const getGroupColor = (group: string) => {
+  const colors: Record<string, string> = {
+    chest: 'bg-red-500/30 text-red-300 border-red-500/40',
+    back: 'bg-blue-500/30 text-blue-300 border-blue-500/40',
+    legs: 'bg-green-500/30 text-green-300 border-green-500/40',
+    arms: 'bg-orange-500/30 text-orange-300 border-orange-500/40',
+    shoulders: 'bg-cyan-500/30 text-cyan-300 border-cyan-500/40',
+    core: 'bg-yellow-500/30 text-yellow-300 border-yellow-500/40',
+    cardio: 'bg-purple-500/30 text-purple-300 border-purple-500/40',
+  };
+  return colors[group] || 'bg-zinc-500/30 text-zinc-300 border-zinc-500/40';
+};
+
 export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProps) {
   const { user, role, signOut } = useAuth();
   
@@ -904,32 +918,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                         <div className="flex items-center justify-between">
                           <button
                             onClick={() => handleViewExercise(exercise)}
-                            className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left flex items-center gap-2"
+                            className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left"
                           >
                             {exercise.name}
                           </button>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                            exercise.tipo === 'aerobico' 
-                              ? 'bg-blue-500/20 text-blue-400' 
-                              : 'bg-orange-500/20 text-orange-400'
-                          }`}>
-                            {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                          </span>
                         </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <div className="flex flex-wrap gap-1">
-                            {exercise.muscles.map((muscle, idx) => (
-                              <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
-                            ))}
-                          </div>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                            exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                            exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}>
-                            {exercise.difficulty === 'beginner' ? 'Principiante' :
-                             exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                          </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {exercise.muscleGroup && exercise.muscleGroup !== 'non-assegnati' && (
+                            <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exercise.muscleGroup)}`}>
+                              {exercise.muscleGroup}
+                            </span>
+                          )}
+                          {exercise.muscles.map((muscle, idx) => (
+                            <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
+                          ))}
                         </div>
                       </div>
                       <button
@@ -990,32 +992,20 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                               <div className="flex items-center justify-between">
                                 <button
                                   onClick={() => handleViewExercise(exercise)}
-                                  className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left flex items-center gap-2"
+                                  className="text-base font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-left"
                                 >
                                   {exercise.name}
                                 </button>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                                  exercise.tipo === 'aerobico' 
-                                    ? 'bg-blue-500/20 text-blue-400' 
-                                    : 'bg-orange-500/20 text-orange-400'
-                                }`}>
-                                  {exercise.tipo === 'aerobico' ? 'Aerobico' : 'Anaerobico'}
-                                </span>
                               </div>
-                              <div className="flex items-center justify-between mt-1">
-                                <div className="flex flex-wrap gap-1">
-                                  {exercise.muscles.map((muscle, idx) => (
-                                    <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
-                                  ))}
-                                </div>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ml-2 ${
-                                  exercise.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                                  exercise.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-red-500/20 text-red-400'
-                                }`}>
-                                  {exercise.difficulty === 'beginner' ? 'Principiante' :
-                                   exercise.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzato'}
-                                </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {exercise.muscleGroup && exercise.muscleGroup !== 'non-assegnati' && (
+                                  <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exercise.muscleGroup)}`}>
+                                    {exercise.muscleGroup}
+                                  </span>
+                                )}
+                                {exercise.muscles.map((muscle, idx) => (
+                                  <span key={idx} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{muscle}</span>
+                                ))}
                               </div>
                             </div>
                             <button
