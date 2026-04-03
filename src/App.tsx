@@ -472,7 +472,7 @@ function App() {
                                   </span>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {exerciseData?.muscles?.map((m: string, i: number) => (
-                                      <span key={i} className="px-2 py-0.5 rounded text-xs bg-white/20 text-white">{m}</span>
+                                      <span key={i} className={`px-2 py-0.5 rounded text-xs ${getMuscleColor(m, muscleCount)}`}>{m}</span>
                                     ))}
                                   </div>
                                 </div>
