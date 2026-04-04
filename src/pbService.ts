@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
 // PocketBase connection
-const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://pb.asigo.cc/api';
+const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://pb.asigo.cc';
 
 // Create a single PocketBase instance
 export const pb = new PocketBase(PB_URL);
@@ -175,7 +175,7 @@ export const uploadGif = async (filename: string, blob: Blob): Promise<string> =
   const record = await pb.collection('media').create(formData);
   
   // Return the file URL (PocketBase v0.36 uses /api/files/ path)
-  return `${PB_URL}/api/files/media/${record.id}/${record.file}`;
+  return pb.files.getURL(record, record.file);
 };
 
 export const getGifUrl = (filename: string) => {
