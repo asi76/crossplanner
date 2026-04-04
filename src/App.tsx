@@ -46,7 +46,7 @@ function App() {
     saveWorkout,
     deleteWorkout
   } = useWorkout();
-  const { exercises: allExercises } = useExercises();
+  const { groups, exercises: allExercises } = useExercises();
   const [currentView, setCurrentView] = useState<View>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('lastView') as View) || 'home';
@@ -150,6 +150,17 @@ function App() {
   const getExerciseById = (id: string, name?: string) => {
     return allExercises.find(e => e.id === id) || (name ? allExercises.find(e => e.name === name) : undefined);
   };
+
+  const getGroupForExercise = (exerciseData: any, workoutExercise?: any) => {
+    const groupId = workoutExercise?.groupId;
+    return groups.find((group) =>
+      group.id === groupId ||
+      group.id === exerciseData?.group_id ||
+      group.name === exerciseData?.muscleGroup
+    );
+  };
+
+  const viewingExerciseGroup = getGroupForExercise(viewingExerciseData, viewingExercise);
 
   const formatDate = (date: Date) => {
     const d = new Date(date);
@@ -464,6 +475,7 @@ function App() {
                           const muscleCount = getMuscleCountForWorkout(workout);
                           return getExercisesByCategory(workout, selectedCategoryId).map((ex: any, index: number) => {
                             const exerciseData = getExerciseById(ex.exerciseId, ex.exerciseName);
+                            const exerciseGroup = getGroupForExercise(exerciseData, ex);
                             return (
                             <div 
                               key={index}
@@ -484,9 +496,9 @@ function App() {
                                     {ex.exerciseName || ex.exerciseId}
                                   </span>
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {exerciseData?.muscleGroup && exerciseData?.muscleGroup !== 'non-assegnati' && (
-                                      <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exerciseData.muscleGroup)}`}>
-                                        {exerciseData.muscleGroup}
+                                    {exerciseGroup && exerciseData?.muscleGroup !== 'non-assegnati' && (
+                                      <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exerciseGroup.name)}`}>
+                                        {exerciseGroup.label || exerciseGroup.name}
                                       </span>
                                     )}
                                     {exerciseData?.muscles?.map((m: string, i: number) => (
@@ -575,9 +587,9 @@ function App() {
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-2">Gruppo</h3>
                     <div className="flex flex-wrap gap-2">
-                      {viewingExerciseData?.muscleGroup && viewingExerciseData?.muscleGroup !== 'non-assegnati' && (
-                        <span className={`px-2 py-1 rounded text-sm border capitalize ${getGroupColor(viewingExerciseData.muscleGroup)}`}>
-                          {viewingExerciseData.muscleGroup}
+                      {viewingExerciseGroup && viewingExerciseData?.muscleGroup !== 'non-assegnati' && (
+                        <span className={`px-2 py-1 rounded text-sm border capitalize ${getGroupColor(viewingExerciseGroup.name)}`}>
+                          {viewingExerciseGroup.label || viewingExerciseGroup.name}
                         </span>
                       )}
                       {viewingExerciseData?.muscles?.map((muscle: string, idx: number) => (
