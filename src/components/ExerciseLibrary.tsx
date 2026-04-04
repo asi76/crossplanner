@@ -316,12 +316,23 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
     try {
       const nextGroupName = editGroupName.trim();
       const colorClass = groupColors.find(c => c.id === editGroupColor)?.class || groupColors[0].class;
+      const exercisesToMigrate = exercises.filter(
+        e => e.group_id === editingGroup.id || e.muscleGroup === editingGroup.name
+      );
+
+      await Promise.all(
+        exercisesToMigrate.map((exercise) => updateExercise(exercise.id, {
+          group_id: editingGroup.id,
+          muscleGroup: nextGroupName,
+        }))
+      );
+
       await updateGroup(editingGroup.id, {
         name: nextGroupName,
         label: nextGroupName,
         color_class: colorClass
       });
-      refreshGroups();
+      await Promise.all([refreshGroups(), refreshExercises()]);
     } catch (error) {
       console.error('Error updating group:', error);
       showNotification('Errore aggiornamento gruppo', 'error');
