@@ -56,6 +56,13 @@ export function ExerciseDetailModal({
   const [localGroupId, setLocalGroupId] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const getExerciseGroup = useCallback((groupId?: string) => {
+    return groups.find((group) =>
+      group.id === groupId ||
+      group.name === exercise.muscleGroup
+    );
+  }, [exercise.muscleGroup, groups]);
+
   // Sync local GIF URL with prop
   useEffect(() => {
     setLocalGifUrl(gifUrl);
@@ -79,11 +86,10 @@ export function ExerciseDetailModal({
     setEditDifficulty(exercise.difficulty || 'intermediate');
     setEditTipo(exercise.tipo || 'anaerobico');
     setEditDescription(exercise.description || '');
-    // Convert muscleGroup value (e.g. 'upper-push') to group ID
-    const group = groups.find(g => g.name.toLowerCase().replace(/ /g, '-') === exercise.muscleGroup);
+    const group = getExerciseGroup();
     setLocalGroupId(group?.id || '');
     setIsEditing(propMode === 'edit' || propMode === 'create');
-  }, [exercise, propMode]);
+  }, [exercise, propMode, getExerciseGroup]);
 
   // Load GIF if not provided by parent
   useEffect(() => {
@@ -488,7 +494,7 @@ export function ExerciseDetailModal({
                       className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                     >
                       {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
+                        <option key={g.id} value={g.id}>{g.label || g.name}</option>
                       ))}
                     </select>
                   </div>
@@ -593,7 +599,7 @@ export function ExerciseDetailModal({
                     className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                   >
                     {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
+                      <option key={g.id} value={g.id}>{g.label || g.name}</option>
                     ))}
                   </select>
                 </div>
@@ -682,7 +688,7 @@ export function ExerciseDetailModal({
                 <div>
                   <h3 className="text-base font-medium text-zinc-400 mb-2">Gruppo</h3>
                   <span className={`px-3 py-1 rounded-full text-base font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20`}>
-                    {groups.find(g => g.name.toLowerCase().replace(/ /g, '-') === exercise.muscleGroup)?.name || 'Nessun gruppo'}
+                    {getExerciseGroup(localGroupId)?.label || getExerciseGroup(localGroupId)?.name || 'Nessun gruppo'}
                   </span>
                 </div>
                 {/* Tags */}
@@ -784,7 +790,7 @@ export function ExerciseDetailModal({
                   className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-left transition-colors"
                 >
                   <span className={`px-3 py-1 rounded text-sm font-semibold border ${group.color_class}`}>
-                    {group.name}
+                    {group.label || group.name}
                   </span>
                 </button>
               ))}

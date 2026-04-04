@@ -121,6 +121,14 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
     return exercise.group_id || getGroupByExercise(exercise)?.id || exercise.muscleGroup || '';
   };
 
+  const getDisplayGroup = (exercise: Exercise, explicitGroupId?: string): ExerciseGroup | undefined => {
+    return groups.find(g =>
+      g.id === explicitGroupId ||
+      g.id === exercise.group_id ||
+      g.name === exercise.muscleGroup
+    );
+  };
+
   const getExercisesForGroup = (groupId: string): Exercise[] => {
     const group = groups.find(g => g.id === groupId);
     if (!group) return [];
@@ -172,7 +180,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
       transition,
     };
     const exerciseData = getExerciseById(ex.exerciseId, ex.exerciseName);
-    const exerciseGroup = groups.find(g => g.id === ex.groupId);
+    const exerciseGroup = exerciseData ? getDisplayGroup(exerciseData, ex.groupId) : undefined;
     const groupLabel = exerciseGroup?.label || 'Nessun gruppo';
 
     // Count muscle occurrences in the current category (all three tabs)
@@ -228,9 +236,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                 </span>
               </button>
               <div className="flex flex-wrap gap-1 mt-1">
-                {exerciseData?.muscleGroup && exerciseData?.muscleGroup !== 'non-assegnati' && (
-                  <span key="group" className={`text-xs px-1.5 py-0.5 rounded border capitalize ${getGroupColor(exerciseData.muscleGroup)}`}>
-                    {exerciseData.muscleGroup}
+                {exerciseGroup && exerciseData?.muscleGroup !== 'non-assegnati' && (
+                  <span key="group" className={`text-xs px-1.5 py-0.5 rounded border capitalize ${getGroupColor(exerciseGroup.name)}`}>
+                    {groupLabel}
                   </span>
                 )}
                 {exerciseData?.muscles?.slice(0, 4).map((m: string, i: number) => (
@@ -931,9 +939,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {exercise.muscleGroup && exercise.muscleGroup !== 'non-assegnati' && (
-                            <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exercise.muscleGroup)}`}>
-                              {exercise.muscleGroup}
+                          {group && exercise.muscleGroup !== 'non-assegnati' && (
+                            <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(group.name)}`}>
+                              {group.label || group.name}
                             </span>
                           )}
                           {exercise.muscles.map((muscle, idx) => (
@@ -994,6 +1002,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                           key={exercise.id}
                           className="px-5 py-4 hover:bg-zinc-800/30 transition-colors"
                         >
+                          {(() => {
+                            const displayGroup = getDisplayGroup(exercise, group.id);
+                            return (
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
@@ -1005,9 +1016,9 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                                 </button>
                               </div>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {exercise.muscleGroup && exercise.muscleGroup !== 'non-assegnati' && (
-                                  <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(exercise.muscleGroup)}`}>
-                                    {exercise.muscleGroup}
+                                {displayGroup && exercise.muscleGroup !== 'non-assegnati' && (
+                                  <span key="group" className={`px-2 py-0.5 rounded text-xs border capitalize ${getGroupColor(displayGroup.name)}`}>
+                                    {displayGroup.label || displayGroup.name}
                                   </span>
                                 )}
                                 {exercise.muscles.map((muscle, idx) => (
@@ -1023,6 +1034,8 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                               <Plus className="w-5 h-5 text-white" />
                             </button>
                           </div>
+                            );
+                          })()}
                         </div>
                       ))
                     )}
@@ -1187,7 +1200,7 @@ export function CreateWorkout({ onBack, onSave, editWorkout }: CreateWorkoutProp
                     <div>
                       <h3 className="text-xs font-medium text-zinc-400 mb-1">Gruppo</h3>
                       <p className="text-white text-sm font-medium">
-                        {groups.find(g => g.id === (editingGroupId || viewingExercise.groupId) || g.name.toLowerCase().replace(/ /g, '-') === (editingGroupId || viewingExercise.groupId))?.label || 'Nessun gruppo'}
+                        {groups.find(g => g.id === (editingGroupId || viewingExercise.groupId))?.label || 'Nessun gruppo'}
                       </p>
                     </div>
 
