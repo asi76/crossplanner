@@ -771,7 +771,7 @@ export function ExerciseLibrary({ onBack }: ExerciseLibraryProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Cerca esercizio..."
-              className="w-full px-4 py-2 pl-10 glass-surface rounded-lg text-white/80 placeholder-white/25 focus:outline-none focus:border-white/30"
+              className="w-full px-4 py-2 pl-10 bg-zinc-800 rounded-lg text-white placeholder-zinc-400 border border-zinc-700 focus:outline-none focus:border-zinc-500"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           </div>
