@@ -42,14 +42,9 @@ export const Login = ({ isPendingUser, pendingEmail }: LoginProps) => {
         photoURL: requestPhotoUrl,
         message: requestMessage,
       });
-      setRequestStatus(
-        result.emailSent
-          ? 'Richiesta salvata e inviata via email all’amministratore.'
-          : 'Richiesta salvata e visibile nel pannello admin, ma l’email non è stata inviata.'
-      );
-      if (result.emailSent) {
-        setShowRequestModal(false);
-      }
+      void result;
+      setRequestStatus('Richiesta inviata. Ora compare nel pannello admin.');
+      setShowRequestModal(false);
       setRequestEmail('');
       setRequestName('');
       setRequestPhotoUrl(null);

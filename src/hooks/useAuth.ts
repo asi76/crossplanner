@@ -35,11 +35,11 @@ async function getUserRole(email: string): Promise<'enabled' | 'pending' | null>
     if (records.length > 0) {
       const apps = Array.isArray(records[0].apps) ? records[0].apps : [];
       if (apps.length > 0 && !apps.includes(APP_ACCESS_SLUG)) {
-        return null;
+        return getUserRoleFromFirebase(email);
       }
       return records[0].role || 'pending';
     }
-    return null;
+    return getUserRoleFromFirebase(email);
   } catch {
     // Fallback to Firebase
     return getUserRoleFromFirebase(email);
