@@ -8,7 +8,7 @@
 
 import PocketBase from 'pocketbase';
 
-const PB_URL = 'https://pb.asigo.cc/api';
+const PB_URL = 'https://pb.fitness.asigo.cc/api';
 const pb = new PocketBase(PB_URL);
 
 // Firebase config (pubblica, letta via REST)

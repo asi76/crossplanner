@@ -4,7 +4,7 @@
  * Uso: node migrate_v2.js
  */
 
-const PB_URL = 'https://pb.asigo.cc/api';
+const PB_URL = 'https://pb.fitness.asigo.cc/api';
 const FIREBASE_PROJECT = 'studio-7990555522-7e3ef';
 const FIREBASE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`;
 

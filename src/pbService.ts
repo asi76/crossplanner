@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
 // PocketBase connection
-const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://pb.asigo.cc';
+const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://pb.fitness.asigo.cc';
 
 // Create a single PocketBase instance
 export const pb = new PocketBase(PB_URL);
